@@ -1,0 +1,13 @@
+# Node modules (dono folders ke liye)
+node_modules/
+**/node_modules/
+
+# Environment files (dono folders ke liye)
+.env
+**/.env
+*.env
+
+# Build aur Uploads
+dist/
+build/
+backend/uploads/*
