@@ -22,6 +22,8 @@ Complaint.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 // Complaint ↔ Status History
 Complaint.hasMany(ComplaintStatusHistory, { foreignKey: 'complaint_id', as: 'complaint_status_history' });
 ComplaintStatusHistory.belongsTo(Complaint, { foreignKey: 'complaint_id' });
+// ✅ Yahan naya relationship add kar (Status History me user kaun tha):
+ComplaintStatusHistory.belongsTo(User, { foreignKey: 'user_id', as: 'User' });
 
 // Complaint ↔ DeterminationofVigilanceAngle
 Complaint.belongsTo(DeterminationofVigilanceAngle, { foreignKey: 'determinationof_vigilance_angle_id', as: 'determinationofvigilanceangle' });

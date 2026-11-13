@@ -64,4 +64,9 @@ router.put('/disclosure-details/:id', auth, allowRoles(1, 2), disclosureDetailVa
 router.post('/disclosure-details/multiple_delete', auth, allowRoles(1, 2), ClosureDetailController.multipleDelete);
 router.post('/disclosure-details/change_status', auth, allowRoles(1, 2), ClosureDetailController.changeStatus);
 
+
+// ============ PUBLIC ROUTES (For Registration) ============
+router.get('/disclosure-details-public', ClosureDetailController.index);
+router.get('/vigilance-angles-public', VigilanceController.index);
+
 export default router;
