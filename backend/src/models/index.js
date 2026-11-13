@@ -7,7 +7,13 @@ import DisclosureDetail from './DisclosureDetail.js';
 import DeterminationofVigilanceAngle from './DeterminationofVigilanceAngle.js';
 import ComplaintStatusHistory from './ComplaintStatusHistory.js';
 import Address from './Address.js';
+import Country from './Country.js';
+import State from './State.js';
+import District from './District.js';
+import City from './City.js';
+import Slider from './Slider.js'; // ✅ Naya Model import kiya
 
+// --- Relationships ---
 
 // User ↔ Complaint
 User.hasMany(Complaint, { foreignKey: 'user_id', as: 'complaints' });
@@ -25,13 +31,22 @@ DeterminationofVigilanceAngle.hasMany(Complaint, { foreignKey: 'determinationof_
 User.hasMany(Address, { foreignKey: 'user_id', as: 'address' });
 Address.belongsTo(User, { foreignKey: 'user_id' });
 
-
 // User/Complaint ↔ DisclosureDetail
 User.belongsTo(DisclosureDetail, { foreignKey: 'disclosure_against', as: 'disclosureDetail' });
 Complaint.belongsTo(DisclosureDetail, { foreignKey: 'disclosure_against', as: 'disclosureDetail' });
 DisclosureDetail.hasMany(User, { foreignKey: 'disclosure_against' });
 
-// Export all
+// Location Relationships (Country > State > District > City)
+Country.hasMany(State, { foreignKey: 'country_id' });
+State.belongsTo(Country, { foreignKey: 'country_id', as: 'Country' });
+
+State.hasMany(District, { foreignKey: 'state_id' });
+District.belongsTo(State, { foreignKey: 'state_id', as: 'state' });
+
+District.hasMany(City, { foreignKey: 'district_id' });
+City.belongsTo(District, { foreignKey: 'district_id', as: 'district' });
+
+// --- Export All ---
 export {
     sequelize,
     User,
@@ -42,4 +57,9 @@ export {
     DeterminationofVigilanceAngle,
     ComplaintStatusHistory,
     Address,
+    Country,
+    State,
+    District,
+    City,
+    Slider, // ✅ Naya Model export kiya
 };

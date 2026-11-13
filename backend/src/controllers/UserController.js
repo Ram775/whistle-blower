@@ -2,6 +2,7 @@ import { User } from '../models/index.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import { Op } from 'sequelize';
 
 // ==============================
 // Helper: Password Compare (Laravel compatible)
@@ -113,7 +114,7 @@ export const checkEmailDuplication = async (req, res) => {
 
         if (email_id) {
             const whereClause = { email_id };
-            if (id) whereClause.id = { [User.sequelize.Op.ne]: id };
+            if (id) whereClause.id = { [Op.ne]: id };
             check_dup = await User.findOne({ where: whereClause });
         }
 
@@ -238,7 +239,7 @@ export const updateProfile = async (req, res) => {
         const existing = await User.findOne({
             where: {
                 email_id,
-                id: { [User.sequelize.Op.ne]: user_id }
+                id: { [Op.ne]: user_id }
             }
         });
         if (existing) {
@@ -294,7 +295,7 @@ export const listUsers = async (req, res) => {
         const users = await User.findAll({
             attributes: ['id', 'first_name', 'middle_name', 'last_name', 'email_id', 'mobile_no', 'status'],
             where: {
-                role_id: { [User.sequelize.Op.notIn]: [1, 3] }
+                role_id: { [Op.notIn]: [1, 3] } // <-- YAHAN OP USE KAR
             }
         });
 
@@ -309,6 +310,7 @@ export const listUsers = async (req, res) => {
 
         return res.status(200).json({ status: true, data });
     } catch (error) {
+        console.error('listUsers error:', error); // <-- Isse terminal me exact error dikhega
         return res.status(500).json({ status: false, message: 'Internal Server Error' });
     }
 };
@@ -371,7 +373,7 @@ export const updateUser = async (req, res) => {
 
         // Duplicate email check (excluding self)
         const existing = await User.findOne({
-            where: { email_id, id: { [User.sequelize.Op.ne]: id } }
+             where: { email_id, id: { [Op.ne]: id } }
         });
         if (existing) {
             return res.status(400).json({ status: false, message: 'Email already exists' });
