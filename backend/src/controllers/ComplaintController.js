@@ -62,6 +62,7 @@ export const submitComplaint = async (req, res) => {
     try {
         const { verified_token, email_id, id_number, ...otherData } = req.body;
 
+        // 1. Verify OTP Token
         let decoded;
         try {
             decoded = jwt.verify(verified_token, process.env.JWT_SECRET);
@@ -73,14 +74,26 @@ export const submitComplaint = async (req, res) => {
             return res.status(400).json({ message: 'Email verification mismatch.' });
         }
 
+        // 2. ✅ Check if user already exists (Duplicate Email Check)
+        const existingUser = await User.findOne({ where: { email_id } });
+        if (existingUser) {
+            return res.status(422).json({ 
+                success: false,
+                message: 'This email is already registered. Please login instead.' 
+            });
+        }
+
+        // 3. Decrypt ID Number
         const memberId = decryptClientIdNumber(id_number);
         if (memberId === null) {
             return res.status(400).json({ message: 'Error while decrypting ID Number' });
         }
 
+        // 4. Handle File Uploads (Multer fields)
         const idPhotoName = req.files && req.files['id_photo'] ? req.files['id_photo'][0].filename : '';
         const complaintDocName = req.files && req.files['complaint_document'] ? req.files['complaint_document'][0].filename : '';
 
+        // 5. Create User
         const newUser = await User.create({
             role_id: 3,
             first_name: otherData.first_name,
@@ -92,7 +105,7 @@ export const submitComplaint = async (req, res) => {
             gender: otherData.gender,
             dob: otherData.dob,
             id_type: otherData.id_type,
-            id_number: memberId,
+            id_number: memberId, // Sequelize model ka setter isko encrypt karega
             id_photo: idPhotoName,
             eligibility_of_whistle_blower: otherData.eligibility_of_whistle_blower,
             disclosure_against: otherData.disclosure_against,
@@ -100,22 +113,20 @@ export const submitComplaint = async (req, res) => {
             status: '1'
         });
 
-        let city_id = otherData.city_id;
-        if (city_id === '0' && otherData.city_name) {
-            city_id = null; // TODO: City model handle
-        }
-
+        // 6. Handle Address
+        let city_id = otherData.city_id || 1;
         await Address.create({
             user_id: newUser.id,
             address_line1: otherData.address_line1 || null,
             address_line2: otherData.address_line2 || null,
             address_line3: otherData.address_line3 || null,
-            state_id: otherData.state_id,
-            district_id: otherData.district_id,
+            state_id: otherData.state_id || 1,
+            district_id: otherData.district_id || 1,
             pincode: otherData.pincode,
             city_id: city_id
         });
 
+        // 7. Create Complaint
         const complaint = await Complaint.create({
             user_id: newUser.id,
             determinationof_vigilance_angle_id: otherData.determinationof_vigilance_angle_id || null,
@@ -125,9 +136,11 @@ export const submitComplaint = async (req, res) => {
             disclosure_against: otherData.disclosure_against
         });
 
+        // 8. Generate Complaint Number & Update
         const cm_number = await generateComplaintNumber();
         await complaint.update({ complaint_no: cm_number });
 
+        // 9. Status History
         await ComplaintStatusHistory.create({
             complaint_id: complaint.id,
             user_id: newUser.id,
@@ -135,33 +148,39 @@ export const submitComplaint = async (req, res) => {
             comment: 'Complaint Registered'
         });
 
-        const disclosure = await DisclosureDetail.findByPk(otherData.disclosure_against);
-        if (disclosure && disclosure.email) {
-            await sendDisclosureEmail(
-                disclosure.email,
-                {
-                    complaint_no: cm_number,
-                    angle_name: 'N/A',
-                    complaint_description: otherData.complaint_description,
-                    remarks: otherData.remarks
-                },
-                {
-                    address_line1: otherData.address_line1,
-                    address_line2: otherData.address_line2,
-                    address_line3: otherData.address_line3,
-                    pincode: otherData.pincode
-                },
-                complaintDocName,
-                idPhotoName
-            );
+        // 10. Send Emails (Wrapped in try-catch so email fail ho toh pura process na ruke)
+        try {
+            const disclosure = await DisclosureDetail.findByPk(otherData.disclosure_against);
+            if (disclosure && disclosure.email) {
+                await sendDisclosureEmail(
+                    disclosure.email,
+                    {
+                        complaint_no: cm_number,
+                        angle_name: 'N/A',
+                        complaint_description: otherData.complaint_description,
+                        remarks: otherData.remarks
+                    },
+                    {
+                        address_line1: otherData.address_line1,
+                        address_line2: otherData.address_line2,
+                        address_line3: otherData.address_line3,
+                        pincode: otherData.pincode
+                    },
+                    complaintDocName,
+                    idPhotoName
+                );
+            }
+            await sendComplaintEmailToCustomer(email_id, otherData.first_name, cm_number);
+        } catch (emailError) {
+            console.error('Email sending failed (but complaint saved):', emailError.message);
         }
-        await sendComplaintEmailToCustomer(email_id, otherData.first_name, cm_number);
 
         return res.status(200).json({
             success: true,
             message: 'We have received your complaint',
             complaint_no: cm_number
         });
+
     } catch (error) {
         console.error('Submit Complaint Error:', error);
         return res.status(500).json({ message: 'Internal Server Error' });
@@ -284,6 +303,31 @@ export const updateComplaintStatus = async (req, res) => {
 
         return res.status(200).json({ status: true, message: 'Data Successfully Updated' });
     } catch (error) {
+        return res.status(500).json({ status: false, message: 'Internal Server Error' });
+    }
+};
+
+
+export const getComplaintById = async (req, res) => {
+    try {
+        const complaint = await Complaint.findByPk(req.params.id, {
+            include: [
+                { model: User, as: 'user', attributes: ['first_name', 'middle_name', 'last_name', 'email_id', 'mobile_no', 'gender', 'dob', 'id_type', 'id_number', 'id_photo', 'eligibility_of_whistle_blower', 'sr_number', 'organization'] },
+                { model: DeterminationofVigilanceAngle, as: 'determinationofvigilanceangle', attributes: ['name'] },
+                { model: DisclosureDetail, as: 'disclosureDetail', attributes: ['name', 'email'] },
+                { 
+                    model: ComplaintStatusHistory, 
+                    as: 'complaint_status_history', 
+                    include: [{ model: User, as: 'User', attributes: ['first_name', 'last_name'] }] // ✅ Yahan 'as: "User"' add kiya
+                }
+            ]
+        });
+
+        if (!complaint) return res.status(404).json({ status: false, message: 'Complaint not found' });
+
+        return res.status(200).json({ status: true, data: complaint });
+    } catch (error) {
+        console.error(error);
         return res.status(500).json({ status: false, message: 'Internal Server Error' });
     }
 };

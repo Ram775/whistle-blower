@@ -5,7 +5,8 @@ import {
     submitComplaint,
     submitNewComplaint,
     getAllComplaints,
-    updateComplaintStatus
+    updateComplaintStatus,
+    getComplaintById 
 } from '../controllers/ComplaintController.js';
 import {
     submitComplaintValidator,
@@ -43,6 +44,7 @@ router.post(
 
 // Admin Routes (role_id = 1 or 2)
 router.get('/admin/all', auth, allowRoles(1, 2), getAllComplaints);
+router.get('/admin/:id', auth, allowRoles(1, 2), getComplaintById);
 router.put('/admin/:id/status', auth, allowRoles(1, 2), updateComplaintStatus);
 
 export default router;
