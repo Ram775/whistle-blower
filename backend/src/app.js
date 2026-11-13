@@ -7,6 +7,7 @@ import routes from './routes/index.js';
 import { multerErrorHandler } from './middlewares/uploadMiddleware.js';
 import morgan from 'morgan';
 
+
 dotenv.config();
 
 const app = express();
@@ -24,6 +25,8 @@ app.use(morgan('dev')); // Logging middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+
 
 // Static folder for uploads
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
