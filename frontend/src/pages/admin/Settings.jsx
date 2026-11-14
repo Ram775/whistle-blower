@@ -55,7 +55,7 @@ const Settings = () => {
         setUploading(true);
         const uploadData = new FormData();
         uploadData.append('file', file);
-        uploadData.append('save_folder', 'logo');
+        uploadData.append('save_folder', 'setting_logo');
 
         try {
             const response = await settingsService.uploadSingleImage(uploadData);

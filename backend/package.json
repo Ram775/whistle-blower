@@ -27,6 +27,8 @@
     "mysql2": "^3.24.6",
     "nodemailer": "^10.5.0",
     "pdfkit": "^0.20.2",
-    "sequelize": "^6.37.8"
+    "sequelize": "^6.37.8",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0"
   }
 }

@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "C:\\Users\\shree\\Desktop\\whistle-blower\\backend\\logs\\.fefb76f517a699ded73aea260f64cf5fcf91dda4-audit.json",
+    "files": [
+        {
+            "date": 1794660738519,
+            "name": "C:\\Users\\shree\\Desktop\\whistle-blower\\backend\\logs\\application-2026-11-14.log",
+            "hash": "676fc872b1f25c5b0b14254b910e3cd748bc70b19cf4f92b43eab7545e5ca43a"
+        }
+    ],
+    "hashType": "sha256"
+}

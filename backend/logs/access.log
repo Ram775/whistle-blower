@@ -1,0 +1,4 @@
+::1 - - [14/Nov/2026:12:53:51 +0000] "GET /api/admin/settings HTTP/1.1" 304 - "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36"
+::1 - - [14/Nov/2026:12:53:52 +0000] "GET /uploads/logo/20261114-1499.png HTTP/1.1" 200 16848 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36"
+::1 - - [14/Nov/2026:12:53:52 +0000] "GET /uploads/logo/20261114-5420.ico HTTP/1.1" 200 1406 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36"
+::1 - - [14/Nov/2026:12:53:54 +0000] "POST /api/admin/settings HTTP/1.1" 200 55 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36"
