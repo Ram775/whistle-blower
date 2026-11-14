@@ -13,16 +13,23 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // ✅ Naya Check: Login/OTP requests pe redirect nahi karna
         const url = error.config?.url || '';
-        const isAuthRequest = 
+        
+        // ✅ Ye saari requests public hain, inpe redirect NAHI karna
+        const isPublicRequest = 
             url.includes('/login') || 
             url.includes('/account_login') || 
             url.includes('/forgot-password') || 
             url.includes('/send-otp') || 
-            url.includes('/verify-otp');
+            url.includes('/verify-otp') ||
+            url.includes('-public') ||  // sliders-public, settings-public, etc.
+            url.includes('/master/states/list') ||  // Registration dropdowns
+            url.includes('/master/districts/get_list') ||
+            url.includes('/master/cities/get_list') ||
+            url.includes('/master/countries/list');
 
-        if (error.response?.status === 401 && !isAuthRequest) {
+        // ✅ Sirf protected routes pe hi 401 handle karo
+        if (error.response?.status === 401 && !isPublicRequest) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             

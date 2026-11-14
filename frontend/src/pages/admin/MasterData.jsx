@@ -1,17 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom'; // ✅ Ye import zaroori hai
 import MasterTable from '../../components/admin/MasterTable';
 
 const MasterData = () => {
-    const [activeTab, setActiveTab] = useState('countries');
+    const [searchParams, setSearchParams] = useSearchParams();
+    
+    // ✅ URL se initial tab uthao, agar nahi hai toh 'countries'
+    const initialTab = searchParams.get('tab') || 'countries';
+    const [activeTab, setActiveTab] = useState(initialTab);
+
+    // ✅ Agar URL change ho (jaise sidebar se click kare), toh tab update karo
+    useEffect(() => {
+        const tabFromUrl = searchParams.get('tab');
+        if (tabFromUrl && tabFromUrl !== activeTab) {
+            setActiveTab(tabFromUrl);
+        }
+    }, [searchParams]);
 
     const tabs = [
         { key: 'countries', label: 'Country' },
         { key: 'states', label: 'State' },
         { key: 'districts', label: 'District' },
         { key: 'cities', label: 'City' },
-        { key: 'vigilance-angles', label: 'Vigilance Angle' },
+        { key: 'vigilance-angles', label: 'Event' }, // ✅ Laravel me "Event" tha
         { key: 'disclosure-details', label: 'Disclosure Detail' },
     ];
+
+    const handleTabChange = (tabKey) => {
+        setActiveTab(tabKey);
+        // ✅ URL bhi update karo taaki sidebar ka link sync rahe
+        setSearchParams({ tab: tabKey });
+    };
 
     return (
         <div className="space-y-6">
@@ -21,7 +40,7 @@ const MasterData = () => {
                 {tabs.map((tab) => (
                     <button
                         key={tab.key}
-                        onClick={() => setActiveTab(tab.key)}
+                        onClick={() => handleTabChange(tab.key)}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
                             activeTab === tab.key 
                                 ? 'bg-blue-600 text-white' 

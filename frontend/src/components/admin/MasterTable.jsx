@@ -198,3 +198,8 @@ const MasterTable = ({ type, title }) => {
 };
 
 export default MasterTable;
+
+
+
+
+

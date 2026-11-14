@@ -24,6 +24,7 @@ import NotFound from "./pages/NotFound";
 import Profile from "./pages/admin/Profile";
 import ForgotPassword from "./pages/admin/ForgotPassword";
 import ResetPassword from "./pages/admin/ResetPassword";
+import LandingPage from "./pages/customer/LandingPage";
 
 const App = () => {
   return (
@@ -44,7 +45,7 @@ const App = () => {
 
       <Routes>
         {/* ================= PUBLIC ROUTES ================= */}
-        <Route path="/" element={<Navigate to="/customer/login" replace />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/admin/forgot-password" element={<ForgotPassword />} />
         <Route
           path="/admin/reset-password/:token"
