@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Shield, Upload } from "lucide-react";
 import { masterService } from "../../services/masterService";
-import { complaintService } from "../../services/complaintService"; // ✅ Ye import add kiya hai
+import { complaintService } from "../../services/complaintService";
 import toast from "react-hot-toast";
 
 const Registration = () => {
@@ -107,9 +107,15 @@ const Registration = () => {
     }
   };
 
-  // Step 1: Send OTP
+  // ✅ Step 1: Send OTP (Email Validation ke saath)
   const handleSendOtp = async (e) => {
     e.preventDefault();
+    
+    if (!email || !email.includes('@')) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await complaintService.sendOtp(email);
@@ -124,9 +130,15 @@ const Registration = () => {
     }
   };
 
-  // Step 1: Verify OTP
+  // ✅ Step 1: Verify OTP
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
+    
+    if (!otp || otp.length !== 6) {
+      toast.error("Please enter a valid 6-digit OTP.");
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await complaintService.verifyOtp(otp, otpToken);
@@ -142,17 +154,14 @@ const Registration = () => {
     }
   };
 
-  // Handle Input Change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle File Change
   const handleFileChange = (e, setter) => {
     setter(e.target.files[0]);
   };
 
-  // Step 2: Submit Complaint
   const handleFullSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -169,8 +178,6 @@ const Registration = () => {
     );
     submitData.append("email_id", email);
     submitData.append("verified_token", verifiedToken);
-    
-    // ✅ Hardcoded IDs hata di, kyunki ab formData me real IDs aa rahi hain
     submitData.append("id_photo", idPhoto);
     if (complaintDoc) submitData.append("complaint_document", complaintDoc);
 
@@ -224,13 +231,14 @@ const Registration = () => {
                 className="w-full border p-2 rounded-lg"
                 placeholder="you@example.com"
                 required
+                disabled={loading || otpToken} 
               />
             </div>
             {!otpToken ? (
               <button
                 onClick={handleSendOtp}
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+                disabled={loading || !email || !email.includes("@")}
+                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
               >
                 {loading ? "Sending..." : "Send OTP"}
               </button>
@@ -251,8 +259,8 @@ const Registration = () => {
                 </div>
                 <button
                   onClick={handleVerifyOtp}
-                  disabled={loading}
-                  className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:bg-green-300"
+                  disabled={loading || otp.length !== 6}
+                  className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:bg-green-300 disabled:cursor-not-allowed"
                 >
                   {loading ? "Verifying..." : "Verify OTP"}
                 </button>
@@ -352,7 +360,6 @@ const Registration = () => {
                   onChange={handleChange}
                 />
 
-                {/* ID PHOTO UPLOAD */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium mb-1">
                     Upload ID Photo (JPG/PNG/PDF, max 1MB) *

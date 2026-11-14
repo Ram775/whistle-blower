@@ -13,9 +13,19 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        // ✅ Naya Check: Login/OTP requests pe redirect nahi karna
+        const url = error.config?.url || '';
+        const isAuthRequest = 
+            url.includes('/login') || 
+            url.includes('/account_login') || 
+            url.includes('/forgot-password') || 
+            url.includes('/send-otp') || 
+            url.includes('/verify-otp');
+
+        if (error.response?.status === 401 && !isAuthRequest) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
+            
             if (window.location.pathname.startsWith('/admin')) {
                 window.location.href = '/admin/login';
             } else {

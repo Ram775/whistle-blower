@@ -16,12 +16,18 @@ import {
 } from '../validators/complaintValidator.js';
 import { auth, allowRoles } from '../middlewares/authMiddleware.js';
 import { upload } from '../middlewares/uploadMiddleware.js';
+import { otpSendLimiter, otpVerifyLimiter, checkBlockedIP } from '../middlewares/rateLimiter.js';
+
+
+
+
 
 const router = express.Router();
+router.use(checkBlockedIP);
 
 // Public Routes (registration flow)
-router.post('/send-otp', sendOtp);
-router.post('/verify-otp', verifyOtp);
+router.post('/send-otp',otpSendLimiter, sendOtp);
+router.post('/verify-otp', otpVerifyLimiter, verifyOtp);
 
 // Public complaint submission (with file uploads)
 router.post(

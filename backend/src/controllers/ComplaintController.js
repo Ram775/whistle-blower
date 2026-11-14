@@ -1,8 +1,11 @@
 import { Complaint, User, Address, DeterminationofVigilanceAngle, DisclosureDetail, ComplaintStatusHistory } from '../models/index.js';
 import { decryptClientIdNumber } from '../utils/encryption.js';
-import { sendOtpMail, sendComplaintEmailToCustomer, sendDisclosureEmail } from '../utils/mailer.js';
+import { sendOtpMail, sendComplaintEmailToCustomer, sendDisclosureEmail,sendOtpLimitEmail } from '../utils/mailer.js';
 import jwt from 'jsonwebtoken';
 import PDFDocument from 'pdfkit';
+
+
+
 
 const generateComplaintNumber = async () => {
     const latest = await Complaint.findOne({ order: [['id', 'DESC']] });
@@ -16,17 +19,33 @@ const generateComplaintNumber = async () => {
 export const sendOtp = async (req, res) => {
     try {
         const { email_id } = req.body;
+
         if (!email_id) return res.status(422).json({ success: false, message: 'Email is required' });
 
+        // ✅ Check if limit reached (rate-limiter ka count check)
+        const remaining = parseInt(req.rateLimit?.remaining || 0);
+        if (remaining === 0) {
+            await sendOtpLimitEmail(email_id);
+            return res.status(429).json({
+                success: false,
+                message: 'OTP send limit reached. Please try again after 1 hour.'
+            });
+        }
+
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpToken = jwt.sign({ otp, email: email_id }, process.env.JWT_SECRET, { expiresIn: '5m' });
+        const otpToken = jwt.sign(
+            { otp, email: email_id },
+            process.env.JWT_SECRET,
+            { expiresIn: '5m' }
+        );
 
         await sendOtpMail(email_id, otp);
 
         return res.status(200).json({
             success: true,
-            message: 'OTP has been sent to your email',
-            otp_token: otpToken
+            message: `OTP sent to your email. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining in this hour.`,
+            otp_token: otpToken,
+            attempts_remaining: remaining
         });
     } catch (error) {
         return res.status(500).json({ success: false, message: 'Failed to send OTP' });
