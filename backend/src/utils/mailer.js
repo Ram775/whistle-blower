@@ -21,42 +21,71 @@ const getUploadPath = (folder, filename) => {
     return fs.existsSync(filePath) ? filePath : null;
 };
 
-// Common Email Shell Wrapper for Consistent Modern UI
-const wrapEmailTemplate = (content, headerColor = '#0f172a', headerTitle = 'Whistle-Blower Portal') => `
+// Shared premium email layout. Presentation-only helper; mail/business logic is unchanged.
+const wrapEmailTemplate = (content, headerColor = '#17324f', headerTitle = 'Whistle-Blower Portal') => `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="color-scheme" content="light">
+        <meta name="supported-color-schemes" content="light">
         <title>${headerTitle}</title>
+        <style>
+            body, table, td, p, h1, h2, h3, a {
+                font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            }
+            @media only screen and (max-width: 620px) {
+                .email-outer { padding: 18px 10px !important; }
+                .email-card { border-radius: 10px !important; }
+                .email-header { padding: 25px 22px !important; }
+                .email-body { padding: 27px 22px !important; }
+                .email-footer { padding: 20px 22px !important; }
+                .email-title { font-size: 19px !important; }
+                .email-copy { font-size: 14px !important; }
+            }
+        </style>
     </head>
-    <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-        <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <body style="margin:0;padding:0;background-color:#f3f6fa;color:#243449;font-family:Inter,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background-color:#f3f6fa;">
             <tr>
-                <td align="center" style="padding: 40px 0;">
-                    <table role="presentation" style="width: 100%; max-width: 600px; border-collapse: collapse; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); overflow: hidden;">
-                        <!-- Header -->
+                <td class="email-outer" align="center" style="padding:38px 14px;">
+                    <table class="email-card" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e4eaf1;border-radius:14px;overflow:hidden;box-shadow:0 8px 28px rgba(25,45,70,.07);">
                         <tr>
-                            <td style="background-color: ${headerColor}; padding: 32px 40px; text-align: left;">
-                                <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.025em;">${headerTitle}</h1>
+                            <td style="height:5px;background-color:${headerColor};font-size:0;line-height:0;">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td class="email-header" style="padding:30px 38px 25px;background:#ffffff;border-bottom:1px solid #edf1f5;">
+                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+                                    <tr>
+                                        <td align="left" style="vertical-align:middle;">
+                                            <div style="font-size:10px;line-height:1.4;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#8290a2;">Secure communication</div>
+                                            <h1 class="email-title" style="margin:8px 0 0;color:#172b43;font-size:21px;line-height:1.35;font-weight:700;letter-spacing:-.35px;">${headerTitle}</h1>
+                                        </td>
+                                        <td align="right" style="vertical-align:middle;">
+                                            <span style="display:inline-block;padding:7px 10px;border:1px solid #e5ebf2;border-radius:6px;background:#f8fafc;color:#64748b;font-size:10px;line-height:1;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">Official notice</span>
+                                        </td>
+                                    </tr>
+                                </table>
                             </td>
                         </tr>
-                        <!-- Body Content -->
                         <tr>
-                            <td style="padding: 40px; color: #334155; font-size: 15px; line-height: 1.6;">
+                            <td class="email-body email-copy" style="padding:36px 38px 38px;color:#435267;font-size:14px;line-height:1.75;font-family:Inter,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
                                 ${content}
                             </td>
                         </tr>
-                        <!-- Footer -->
                         <tr>
-                            <td style="background-color: #f8fafc; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
-                                <p style="margin: 0; font-size: 13px; color: #64748b;">
+                            <td class="email-footer" style="padding:22px 38px;background:#f8fafc;border-top:1px solid #e9eef4;text-align:center;">
+                                <p style="margin:0;color:#78879a;font-size:11px;line-height:1.7;font-family:Inter,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
                                     &copy; ${new Date().getFullYear()} Whistle-Blower Portal. All rights reserved.<br>
-                                    This is an automated system notification, please do not reply directly to this email.
+                                    This is an automated system notification. Please do not reply directly to this email.
                                 </p>
                             </td>
                         </tr>
                     </table>
+                    <div style="padding:16px 10px 0;color:#9aa6b5;font-size:10px;line-height:1.5;text-align:center;font-family:Inter,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                        Confidentiality matters. Please handle this communication appropriately.
+                    </div>
                 </td>
             </tr>
         </table>
