@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, X } from 'lucide-react';
+import { Plus, Edit, Trash2 } from 'lucide-react';
 import { masterService } from '../../services/masterService';
 import DataTable from './DataTable';
 import Modal from './Modal';
+import ConfirmDialog from './ConfirmDialog';
 import toast from 'react-hot-toast';
 
 const MasterTable = ({ type, title }) => {
@@ -11,60 +12,20 @@ const MasterTable = ({ type, title }) => {
     const [showModal, setShowModal] = useState(false);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({ name: '', sort_order: 0, status: '1' });
+    
+    // Confirm Dialog State
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [deleteId, setDeleteId] = useState(null);
 
-    // Get service based on type
     const getService = () => {
         switch (type) {
-            case 'countries':
-                return {
-                    list: masterService.getCountries,
-                    create: masterService.createCountry,
-                    update: masterService.updateCountry,
-                    remove: masterService.deleteCountries,
-                    status: masterService.changeCountryStatus
-                };
-            case 'states':
-                return {
-                    list: masterService.getStates,
-                    create: masterService.createState,
-                    update: masterService.updateState,
-                    remove: masterService.deleteStates,
-                    status: masterService.changeStateStatus
-                };
-            case 'districts':
-                return {
-                    list: masterService.getDistricts,
-                    create: masterService.createDistrict,
-                    update: masterService.updateDistrict,
-                    remove: masterService.deleteDistricts,
-                    status: masterService.changeDistrictStatus
-                };
-            case 'cities':
-                return {
-                    list: masterService.getCities,
-                    create: masterService.createCity,
-                    update: masterService.updateCity,
-                    remove: masterService.deleteCities,
-                    status: masterService.changeCityStatus
-                };
-            case 'vigilance-angles':
-                return {
-                    list: masterService.getVigilanceAngles,
-                    create: masterService.createVigilanceAngle,
-                    update: masterService.updateVigilanceAngle,
-                    remove: masterService.deleteVigilanceAngles,
-                    status: masterService.changeVigilanceAngleStatus
-                };
-            case 'disclosure-details':
-                return {
-                    list: masterService.getDisclosures,
-                    create: masterService.createDisclosure,
-                    update: masterService.updateDisclosure,
-                    remove: masterService.deleteDisclosures,
-                    status: masterService.changeDisclosureStatus
-                };
-            default:
-                return null;
+            case 'countries': return { list: masterService.getCountries, create: masterService.createCountry, update: masterService.updateCountry, remove: masterService.deleteCountries, status: masterService.changeCountryStatus };
+            case 'states': return { list: masterService.getStates, create: masterService.createState, update: masterService.updateState, remove: masterService.deleteStates, status: masterService.changeStateStatus };
+            case 'districts': return { list: masterService.getDistricts, create: masterService.createDistrict, update: masterService.updateDistrict, remove: masterService.deleteDistricts, status: masterService.changeDistrictStatus };
+            case 'cities': return { list: masterService.getCities, create: masterService.createCity, update: masterService.updateCity, remove: masterService.deleteCities, status: masterService.changeCityStatus };
+            case 'vigilance-angles': return { list: masterService.getVigilanceAngles, create: masterService.createVigilanceAngle, update: masterService.updateVigilanceAngle, remove: masterService.deleteVigilanceAngles, status: masterService.changeVigilanceAngleStatus };
+            case 'disclosure-details': return { list: masterService.getDisclosures, create: masterService.createDisclosure, update: masterService.updateDisclosure, remove: masterService.deleteDisclosures, status: masterService.changeDisclosureStatus };
+            default: return null;
         }
     };
 
@@ -87,7 +48,11 @@ const MasterTable = ({ type, title }) => {
     const handleOpenModal = (row = null) => {
         if (row) {
             setEditId(row.id);
-            setFormData({ name: row.name || row.state_name || row.district_name || row.city_name, sort_order: row.sort_order || 0, status: String(row.status) });
+            setFormData({ 
+                name: row.name || row.state_name || row.district_name || row.city_name, 
+                sort_order: row.sort_order || 0, 
+                status: String(row.status) 
+            });
         } else {
             setEditId(null);
             setFormData({ name: '', sort_order: 0, status: '1' });
@@ -100,13 +65,11 @@ const MasterTable = ({ type, title }) => {
         try {
             const payload = { ...formData };
             
-            // Adjust field name based on type
             if (type === 'states') payload.state_name = formData.name;
             else if (type === 'districts') payload.district_name = formData.name;
             else if (type === 'cities') payload.city_name = formData.name;
             else payload.name = formData.name;
 
-            // Add required IDs (hardcoded for now, baad me dropdown se aayega)
             if (type === 'states') payload.country_id = 1;
             if (type === 'districts') payload.state_id = 1;
             if (type === 'cities') { payload.district_id = 1; payload.pincode = '400001'; }
@@ -125,11 +88,19 @@ const MasterTable = ({ type, title }) => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm(`Delete this ${title}?`)) return;
+    // Delete Click - Opens Confirm Modal
+    const handleDeleteClick = (id) => {
+        setDeleteId(id);
+        setConfirmOpen(true);
+    };
+
+    // Actual Delete
+    const handleConfirmDelete = async () => {
         try {
-            await getService().remove([id]);
+            await getService().remove([deleteId]);
             toast.success(`${title} deleted successfully!`);
+            setConfirmOpen(false);
+            setDeleteId(null);
             fetchData();
         } catch (error) {
             toast.error('Delete failed');
@@ -172,7 +143,7 @@ const MasterTable = ({ type, title }) => {
             render: (row) => (
                 <div className="flex space-x-2">
                     <button onClick={() => handleOpenModal(row)} className="text-blue-600 hover:text-blue-800"><Edit className="w-4 h-4" /></button>
-                    <button onClick={() => handleDelete(row.id)} className="text-red-600 hover:text-red-800"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => handleDeleteClick(row.id)} className="text-red-600 hover:text-red-800"><Trash2 className="w-4 h-4" /></button>
                 </div>
             )
         }
@@ -189,6 +160,7 @@ const MasterTable = ({ type, title }) => {
 
             <DataTable columns={columns} data={data} loading={loading} emptyMessage={`No ${title} found.`} />
 
+            {/* Add/Edit Modal */}
             <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editId ? `Edit ${title}` : `Add ${title}`}>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -212,6 +184,15 @@ const MasterTable = ({ type, title }) => {
                     </div>
                 </form>
             </Modal>
+
+            {/* Delete Confirm Dialog */}
+            <ConfirmDialog 
+                isOpen={confirmOpen}
+                title={`Delete ${title}?`}
+                message={`Are you sure you want to delete this ${title}? This cannot be undone.`}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setConfirmOpen(false)}
+            />
         </div>
     );
 };

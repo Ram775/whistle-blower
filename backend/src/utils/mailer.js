@@ -124,3 +124,28 @@ export const sendStatusUpdateEmail = async (to, firstName, complaintNo, statusTe
         console.error('Email error:', error);
     }
 };
+
+
+export const sendResetLinkEmail = async (to, resetLink) => {
+    try {
+        await transporter.sendMail({
+            from: `"Whistle-Blower Portal" <${process.env.EMAIL_USER}>`,
+            to,
+            subject: 'Password Reset Link - Whistle-Blower',
+            html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+                    <h2>Password Reset Request</h2>
+                    <p>We received a request to reset your password. Click the button below to reset it:</p>
+                    <a href="${resetLink}" style="display:inline-block; padding: 10px 20px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">
+                        Reset Password
+                    </a>
+                    <p style="margin-top: 20px; font-size: 12px; color: #666;">If you didn't request this, you can ignore this email.</p>
+                </div>
+            `,
+        });
+        return true;
+    } catch (error) {
+        console.error('Email send error:', error);
+        return false;
+    }
+};

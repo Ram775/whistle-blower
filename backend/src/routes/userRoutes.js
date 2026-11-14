@@ -13,7 +13,9 @@ import {
     updateUser,
     editUser,
     forgotPassword,
-    postPassword
+    postPassword,
+    verifyResetOtp,
+    sendResetOtp
 } from '../controllers/UserController.js';
 import {
     storeUserValidator,
@@ -31,6 +33,8 @@ router.post('/login', loginValidator, loginSubmit);
 router.post('/check_duplication', checkDuplication);
 router.post('/check_email_duplication', checkEmailDuplication);
 router.post('/forgot-password', forgotPassword);
+router.post('/forgot-password/send-otp', sendResetOtp);
+router.post('/forgot-password/verify-otp', verifyResetOtp);
 router.post('/reset-password/:remember_token', postPassword);
 
 // Authenticated routes

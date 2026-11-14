@@ -4,16 +4,14 @@ import sequelize from '../config/db.js';
 const PasswordReset = sequelize.define(
     'PasswordReset',
     {
-        id: { type: DataTypes.BIGINT.UNSIGNED, primaryKey: true, autoIncrement: true },
-        email: { type: DataTypes.STRING, allowNull: true },
+        // ✅ id field hata di
+        email: { type: DataTypes.STRING, allowNull: true, primaryKey: true }, // Email primary key ban sakta hai (Laravel me aise hi hota hai)
         token: { type: DataTypes.STRING, allowNull: true },
         created_at: { type: DataTypes.DATE, allowNull: true },
     },
     {
         tableName: 'tbl_password_resets',
-        timestamps: true, 
-        createdAt: 'created_at',
-        updatedAt: false, // Laravel password_resets has no updated_at
+        timestamps: false, // ✅ timestamps false karo kyunki created_at manually de rahe hain
         underscored: true,
     }
 );

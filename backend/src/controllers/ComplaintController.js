@@ -285,26 +285,44 @@ export const updateComplaintStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { complaint_status, comment } = req.body;
-        const adminUser = req.user;
+        const adminUser = req.user; // auth middleware se aata hai
 
         const complaint = await Complaint.findByPk(id);
-        if (!complaint) return res.status(404).json({ message: 'Complaint not found' });
+        if (!complaint) {
+            return res.status(404).json({ status: false, message: 'Complaint not found' });
+        }
 
+        // 1. Status History me entry
         await ComplaintStatusHistory.create({
             complaint_id: complaint.id,
             user_id: adminUser.id,
-            complaint_status,
-            comment
+            complaint_status: Number(complaint_status), // ✅ Number me convert
+            comment: comment || null // ✅ Null safe
         });
 
+        // 2. Complaint table me status update
         await complaint.update({
-            complaint_status,
+            complaint_status: Number(complaint_status), // ✅ Number me
             last_updated_by: adminUser.id
         });
 
-        return res.status(200).json({ status: true, message: 'Data Successfully Updated' });
+        // 3. Customer ko email (agar chaho toh)
+        try {
+            const user = await User.findByPk(complaint.user_id);
+            if (user && user.email_id) {
+                const statusText = complaint_status == 1 ? 'Pending' : complaint_status == 2 ? 'Under Processing' : 'Disposed';
+                const { sendStatusUpdateEmail } = await import('../utils/mailer.js');
+                await sendStatusUpdateEmail(user.email_id, user.first_name, complaint.complaint_no, statusText, comment);
+            }
+        } catch (emailError) {
+            console.error('Email failed but status updated:', emailError.message);
+        }
+
+        return res.status(200).json({ status: true, message: 'Status updated successfully' });
+
     } catch (error) {
-        return res.status(500).json({ status: false, message: 'Internal Server Error' });
+        console.error('Update Status Error:', error);
+        return res.status(500).json({ status: false, message: error.message || 'Internal Server Error' });
     }
 };
 

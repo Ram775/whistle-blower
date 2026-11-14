@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Shield, Upload } from "lucide-react";
-import api from "../../api/axios";
-import toast from "react-hot-toast";
 import { masterService } from "../../services/masterService";
+import { complaintService } from "../../services/complaintService"; // ✅ Ye import add kiya hai
+import toast from "react-hot-toast";
 
 const Registration = () => {
   const navigate = useNavigate();
@@ -56,11 +56,10 @@ const Registration = () => {
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
-        // Public data (Country, Disclosure, Vigilance Angle)
         const [disclosureRes, angleRes, stateRes] = await Promise.all([
           masterService.getPublicDisclosures(),
           masterService.getPublicVigilanceAngles(),
-          masterService.getStateList(), // Public state list
+          masterService.getStateList(),
         ]);
         if (disclosureRes.data) setDisclosures(disclosureRes.data);
         if (angleRes.data) setAngles(angleRes.data);
@@ -166,13 +165,12 @@ const Registration = () => {
 
     const submitData = new FormData();
     Object.keys(formData).forEach((key) =>
-      submitData.append(key, formData[key]),
+      submitData.append(key, formData[key])
     );
     submitData.append("email_id", email);
     submitData.append("verified_token", verifiedToken);
-    submitData.append("state_id", "1");
-    submitData.append("district_id", "1");
-    submitData.append("city_id", "1");
+    
+    // ✅ Hardcoded IDs hata di, kyunki ab formData me real IDs aa rahi hain
     submitData.append("id_photo", idPhoto);
     if (complaintDoc) submitData.append("complaint_document", complaintDoc);
 
@@ -180,13 +178,13 @@ const Registration = () => {
       const response = await complaintService.submitComplaint(submitData);
       if (response.success) {
         toast.success(
-          `Complaint registered! Your Complaint No: ${response.complaint_no}`,
+          `Complaint registered! Your Complaint No: ${response.complaint_no}`
         );
         navigate("/customer/login");
       }
     } catch (err) {
       toast.error(
-        err.response?.data?.message || "Failed to register complaint.",
+        err.response?.data?.message || "Failed to register complaint."
       );
     } finally {
       setLoading(false);
@@ -373,7 +371,6 @@ const Registration = () => {
               </div>
             </div>
 
-            {/* Address */}
             {/* Address Details */}
             <div>
               <h3 className="font-bold text-lg text-blue-600 mb-3 border-b pb-2">
@@ -472,7 +469,6 @@ const Registration = () => {
                   onChange={handleChange}
                 />
 
-                {/* Dropdown 1: Vigilance Angle */}
                 <select
                   name="determinationof_vigilance_angle_id"
                   required
@@ -487,7 +483,6 @@ const Registration = () => {
                   ))}
                 </select>
 
-                {/* Dropdown 2: Disclosure Against */}
                 <select
                   name="disclosure_against"
                   required
@@ -518,7 +513,6 @@ const Registration = () => {
                   onChange={handleChange}
                 ></textarea>
 
-                {/* COMPLAINT DOC UPLOAD */}
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     Upload Complaint Document (PDF, max 1MB - Optional)

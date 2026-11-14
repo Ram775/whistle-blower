@@ -1,8 +1,10 @@
-import { User } from '../models/index.js';
+import { User,PasswordReset } from '../models/index.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { Op } from 'sequelize';
+import { sendOtpMail, sendResetLinkEmail } from '../utils/mailer.js';
+
 
 // ==============================
 // Helper: Password Compare (Laravel compatible)
@@ -155,6 +157,7 @@ export const forgotPassword = async (req, res) => {
         const { PasswordReset } = await import('../models/index.js');
         const { sendOtpMail } = await import('../utils/mailer.js');
 
+        // ✅ Token generate (crypto.randomBytes ke liye crypto import zaroori hai)
         const token = crypto.randomBytes(32).toString('hex');
 
         const email_exist = await User.findOne({
@@ -162,7 +165,10 @@ export const forgotPassword = async (req, res) => {
         });
 
         if (!email_exist) {
-            return res.status(404).json({ status: false, message: 'Sorry this email id is not registered' });
+            return res.status(404).json({ 
+                status: false, 
+                message: 'This email is not registered as an Admin.' 
+            });
         }
 
         await PasswordReset.create({
@@ -173,14 +179,17 @@ export const forgotPassword = async (req, res) => {
 
         await email_exist.update({ remember_token: token });
 
-        // Send reset link via mailer
-        await sendOtpMail(email, `Reset Link: ${process.env.FRONTEND_URL}/reset-password/${token}`);
+        // ✅ Reset Link (Frontend route: /admin/reset-password/:token)
+        const resetLink = `${process.env.FRONTEND_URL}/admin/reset-password/${token}`;
+        
+        await sendOtpMail(email, `Click here to reset your password: ${resetLink}`);
 
         return res.status(200).json({
             status: true,
-            message: 'Forgot Password link is send to your registered email id'
+            message: 'Password reset link sent to your registered email id'
         });
     } catch (error) {
+        console.error('Forgot Password Error:', error); // ✅ Log karo taaki pata chale error kya hai
         return res.status(500).json({ status: false, message: 'Internal Server Error' });
     }
 };
@@ -415,5 +424,98 @@ export const changeStatus = async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json({ status: false, message: 'Something went wrong' });
+    }
+};
+
+
+
+
+// ✅ Step 1: Send OTP for Password Reset
+export const sendResetOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        // Check if user exists (Admin ya Vigilance)
+        const email_exist = await User.findOne({ 
+            where: { email_id: email, status: '1', role_id: [1, 2] } 
+        });
+
+        if (!email_exist) {
+            return res.status(404).json({ 
+                status: false, 
+                message: 'This email is not registered as an Admin.' 
+            });
+        }
+
+        // Generate OTP (6 digits)
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Token me OTP aur Email store karo (5 min validity)
+        const otpToken = jwt.sign(
+            { otp, email, purpose: 'password_reset' },
+            process.env.JWT_SECRET,
+            { expiresIn: '5m' }
+        );
+
+        // OTP Email bhejo
+        await sendOtpMail(email, otp);
+
+        return res.status(200).json({
+            status: true,
+            message: 'OTP sent to your email.',
+            otp_token: otpToken
+        });
+    } catch (error) {
+        console.error('Send Reset OTP Error:', error);
+        return res.status(500).json({ status: false, message: 'Internal Server Error' });
+    }
+};
+
+// ✅ Step 2: Verify OTP + Send Reset Link
+export const verifyResetOtp = async (req, res) => {
+    try {
+        const { email, otp, otp_token } = req.body;
+
+        // OTP Token verify karo
+        let decoded;
+        try {
+            decoded = jwt.verify(otp_token, process.env.JWT_SECRET);
+        } catch (e) {
+            return res.status(400).json({ status: false, message: 'OTP expired or invalid.' });
+        }
+
+        if (decoded.purpose !== 'password_reset' || decoded.email !== email) {
+            return res.status(400).json({ status: false, message: 'Invalid verification request.' });
+        }
+
+        if (decoded.otp !== otp) {
+            return res.status(400).json({ status: false, message: 'Invalid OTP.' });
+        }
+
+        // ✅ OTP verified! Ab Reset Link generate karo
+        const resetToken = crypto.randomBytes(32).toString('hex');
+
+        await PasswordReset.create({
+            email: email,
+            token: resetToken,
+            created_at: new Date()
+        });
+
+        await User.update(
+            { remember_token: resetToken },
+            { where: { email_id: email } }
+        );
+
+        // Reset Link email pe bhejo
+        const resetLink = `${process.env.FRONTEND_URL}/admin/reset-password/${resetToken}`;
+        await sendResetLinkEmail(email, resetLink);
+
+        return res.status(200).json({
+            status: true,
+            message: 'Password reset link sent to your email.'
+        });
+    } catch (error) {
+        console.error('Verify Reset OTP Error:', error);
+        return res.status(500).json({ status: false, message: 'Internal Server Error' });
     }
 };

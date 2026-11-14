@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-
-  import toast from 'react-hot-toast';
-import { ArrowLeft, User, FileText, CheckCircle, Clock, Download, AlertCircle, FileDown } from 'lucide-react';
+import { ArrowLeft, User, FileText, Clock, Download, FileDown } from 'lucide-react';
 import api from '../../api/axios';
+import { complaintService } from '../../services/complaintService'; // ✅ IMPORT ADD KIYA
+import toast from 'react-hot-toast';
 
 const ComplaintView = () => {
     const { id } = useParams();
@@ -12,7 +12,6 @@ const ComplaintView = () => {
     const [loading, setLoading] = useState(true);
     const [updateLoading, setUpdateLoading] = useState(false);
     const [statusData, setStatusData] = useState({ complaint_status: '', comment: '' });
-    const [message, setMessage] = useState({ type: '', text: '' });
 
     useEffect(() => {
         fetchComplaint();
@@ -20,6 +19,7 @@ const ComplaintView = () => {
 
     const fetchComplaint = async () => {
         try {
+            // Yahan bhi service use kar sakte hain, par abhi direct api call chalega
             const response = await api.get(`/complaints/admin/${id}`);
             if (response.data.status) {
                 setComplaint(response.data.data);
@@ -29,29 +29,29 @@ const ComplaintView = () => {
                 });
             }
         } catch (error) {
-            console.error(error);
+            toast.error('Failed to load complaint details');
         } finally {
             setLoading(false);
         }
     };
 
+    const handleStatusUpdate = async (e) => {
+        e.preventDefault();
+        setUpdateLoading(true);
 
-const handleStatusUpdate = async (e) => {
-    e.preventDefault();
-    setUpdateLoading(true);
-
-    try {
-        const response = await complaintService.updateComplaintStatus(id, statusData);
-        if (response.status) {
-            toast.success('Status updated successfully!');
-            fetchComplaint();
+        try {
+            // ✅ Service call
+            const response = await complaintService.updateComplaintStatus(id, statusData);
+            if (response.status) {
+                toast.success('Status updated successfully!');
+                fetchComplaint(); // Refresh data
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to update status');
+        } finally {
+            setUpdateLoading(false);
         }
-    } catch (error) {
-        toast.error(error.response?.data?.message || 'Failed to update status');
-    } finally {
-        setUpdateLoading(false);
-    }
-};
+    };
 
     // ✅ PDF Download Function
     const handleDownloadPdf = () => {
@@ -82,7 +82,6 @@ const handleStatusUpdate = async (e) => {
                     </div>
                 </div>
                 
-                {/* ✅ PDF Download Button */}
                 <button 
                     onClick={handleDownloadPdf}
                     className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-red-700 transition shadow-sm"
@@ -90,13 +89,6 @@ const handleStatusUpdate = async (e) => {
                     <FileDown className="w-5 h-5 mr-2" /> Download PDF
                 </button>
             </div>
-
-            {message.text && (
-                <div className={`p-4 rounded-lg flex items-center ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {message.type === 'success' ? <CheckCircle className="w-5 h-5 mr-2" /> : <AlertCircle className="w-5 h-5 mr-2" />}
-                    {message.text}
-                </div>
-            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Left Column (Details) */}

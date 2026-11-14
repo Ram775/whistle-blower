@@ -21,27 +21,35 @@ import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import NewComplaint from "./pages/customer/NewComplaint";
 import CustomerComplaintView from "./pages/customer/CustomerComplaintView";
 import NotFound from "./pages/NotFound";
+import Profile from "./pages/admin/Profile";
+import ForgotPassword from "./pages/admin/ForgotPassword";
+import ResetPassword from "./pages/admin/ResetPassword";
 
 const App = () => {
   return (
     <AuthProvider>
-       <Toaster 
+      <Toaster
         position="top-right"
         toastOptions={{
           duration: 4000,
           style: {
-            background: '#363636',
-            color: '#fff',
-            borderRadius: '8px',
+            background: "#363636",
+            color: "#fff",
+            borderRadius: "8px",
           },
-          success: { theme: { primary: '#10B981' } },
-          error: { theme: { primary: '#EF4444' } },
+          success: { theme: { primary: "#10B981" } },
+          error: { theme: { primary: "#EF4444" } },
         }}
       />
 
       <Routes>
         {/* ================= PUBLIC ROUTES ================= */}
         <Route path="/" element={<Navigate to="/customer/login" replace />} />
+        <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+        <Route
+          path="/admin/reset-password/:token"
+          element={<ResetPassword />}
+        />
 
         <Route path="/admin/login" element={<Login />} />
         <Route path="/customer/login" element={<UserLogin />} />
@@ -66,6 +74,7 @@ const App = () => {
             <Route path="/admin/sliders" element={<SliderList />} />
             <Route path="/admin/master" element={<MasterData />} />
             <Route path="/admin/settings" element={<Settings />} />
+            <Route path="/admin/profile" element={<Profile />} />
           </Route>
         </Route>
 
