@@ -1,8 +1,14 @@
-import { User } from '../models/index.js';
+import { User,PasswordReset } from '../models/index.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { Op } from 'sequelize';
+
+import { sendOtpMail, sendResetLinkEmail,sendLoginAlertEmail, sendAccountBlockedEmail} from '../utils/mailer.js';
+import { getSecurityContext } from '../utils/security.js';
+import { sendSecurityAlertEmail } from '../utils/mailer.js';
+
+
 
 // ==============================
 // Helper: Password Compare (Laravel compatible)
@@ -25,26 +31,58 @@ const hashPassword = async (plainPassword) => {
 // ==============================
 // 1. Admin Login
 // ==============================
+
+
 export const loginSubmit = async (req, res) => {
     try {
         const { email, password } = req.body;
+        const security = getSecurityContext(req);
 
         const user = await User.findOne({
-            where: {
-                email_id: email,
-                role_id: [1, 2], // admin or vigilance
-                status: '1'
-            }
+            where: { email_id: email, role_id: [1, 2], status: '1' }
         });
 
         if (!user) {
-            return res.status(401).json({ status: false, message: 'Username Or Password Incorrect' });
+            return res.status(401).json({
+                status: false,
+                message: 'Invalid Credentials',
+                attempts_remaining: null
+            });
         }
 
         const isMatch = await comparePassword(password, user.password);
+        
+        // ❌ Wrong Password
         if (!isMatch) {
-            return res.status(401).json({ status: false, message: 'Username Or Password Incorrect' });
+            const remaining = parseInt(req.rateLimit?.remaining || 4);
+            const willBlock = remaining <= 1;
+
+            // ✅ Email Alert bhejo
+            await sendSecurityAlertEmail(user.email_id, {
+                type: 'LOGIN_FAILED',
+                name: user.first_name,
+                ip: security.ip,
+                userAgent: security.userAgent,
+                timestamp: security.timestamp,
+                attemptsLeft: remaining,
+                blocked: willBlock
+            });
+
+            return res.status(401).json({
+                status: false,
+                message: `Invalid Credentials. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`,
+                attempts_remaining: remaining
+            });
         }
+
+        // ✅ Successful Login - Alert bhejo
+        await sendSecurityAlertEmail(user.email_id, {
+            type: 'LOGIN_SUCCESS',
+            name: user.first_name,
+            ip: security.ip,
+            userAgent: security.userAgent,
+            timestamp: security.timestamp
+        });
 
         const token = jwt.sign(
             { id: user.id, role_id: user.role_id, type: 'admin' },
@@ -66,7 +104,7 @@ export const loginSubmit = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('Login Error:', error);
         return res.status(500).json({ status: false, message: 'Internal Server Error' });
     }
 };
@@ -155,6 +193,7 @@ export const forgotPassword = async (req, res) => {
         const { PasswordReset } = await import('../models/index.js');
         const { sendOtpMail } = await import('../utils/mailer.js');
 
+        // ✅ Token generate (crypto.randomBytes ke liye crypto import zaroori hai)
         const token = crypto.randomBytes(32).toString('hex');
 
         const email_exist = await User.findOne({
@@ -162,7 +201,10 @@ export const forgotPassword = async (req, res) => {
         });
 
         if (!email_exist) {
-            return res.status(404).json({ status: false, message: 'Sorry this email id is not registered' });
+            return res.status(404).json({ 
+                status: false, 
+                message: 'This email is not registered as an Admin.' 
+            });
         }
 
         await PasswordReset.create({
@@ -173,14 +215,17 @@ export const forgotPassword = async (req, res) => {
 
         await email_exist.update({ remember_token: token });
 
-        // Send reset link via mailer
-        await sendOtpMail(email, `Reset Link: ${process.env.FRONTEND_URL}/reset-password/${token}`);
+        // ✅ Reset Link (Frontend route: /admin/reset-password/:token)
+        const resetLink = `${process.env.FRONTEND_URL}/admin/reset-password/${token}`;
+        
+        await sendOtpMail(email, `Click here to reset your password: ${resetLink}`);
 
         return res.status(200).json({
             status: true,
-            message: 'Forgot Password link is send to your registered email id'
+            message: 'Password reset link sent to your registered email id'
         });
     } catch (error) {
+        console.error('Forgot Password Error:', error); // ✅ Log karo taaki pata chale error kya hai
         return res.status(500).json({ status: false, message: 'Internal Server Error' });
     }
 };
@@ -192,9 +237,10 @@ export const postPassword = async (req, res) => {
     try {
         const { remember_token } = req.params;
         const { new_password, confirm_new_password } = req.body;
+        const security = getSecurityContext(req);
 
         if (new_password !== confirm_new_password) {
-            return res.status(400).json({ status: false, message: 'New Password & Confirm Password Not match' });
+            return res.status(400).json({ status: false, message: 'Passwords do not match' });
         }
 
         const user = await User.findOne({ where: { remember_token } });
@@ -206,7 +252,17 @@ export const postPassword = async (req, res) => {
         const hashed = await hashPassword(new_password);
         await user.update({ password: hashed, remember_token: '' });
 
-        return res.status(200).json({ status: true, message: 'Your password is updated successfully' });
+        // ✅ Password Reset Complete Alert
+        await sendSecurityAlertEmail(user.email_id, {
+            type: 'PASSWORD_CHANGED',
+            name: user.first_name,
+            ip: security.ip,
+            userAgent: security.userAgent,
+            timestamp: security.timestamp,
+            extraMessage: 'Your password has been reset successfully via the reset link. You can now login with your new password.'
+        });
+
+        return res.status(200).json({ status: true, message: 'Password reset successfully!' });
     } catch (error) {
         return res.status(500).json({ status: false, message: 'Internal Server Error' });
     }
@@ -269,17 +325,37 @@ export const updatePassword = async (req, res) => {
     try {
         const { old_password, new_password } = req.body;
         const user = await User.findByPk(req.user.id);
+        const security = getSecurityContext(req);
 
         const isMatch = await comparePassword(old_password, user.password);
         if (!isMatch) {
+            // ❌ Old password galat
+            await sendSecurityAlertEmail(user.email_id, {
+                type: 'LOGIN_FAILED',
+                name: user.first_name,
+                ip: security.ip,
+                userAgent: security.userAgent,
+                timestamp: security.timestamp,
+                extraMessage: 'An attempt was made to change your password using an incorrect old password.'
+            });
+
             return res.status(400).json({
                 status: false,
-                message: 'Your Old Password Does Not Matches With the Provided Password.'
+                message: 'Your Old Password Does Not Match With The Provided Password.'
             });
         }
 
         const hashed = await hashPassword(new_password);
         await user.update({ password: hashed });
+
+        // ✅ Password Changed Alert
+        await sendSecurityAlertEmail(user.email_id, {
+            type: 'PASSWORD_CHANGED',
+            name: user.first_name,
+            ip: security.ip,
+            userAgent: security.userAgent,
+            timestamp: security.timestamp
+        });
 
         return res.status(200).json({ status: true, message: 'Your Password Updated Successfully' });
     } catch (error) {
@@ -415,5 +491,116 @@ export const changeStatus = async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json({ status: false, message: 'Something went wrong' });
+    }
+};
+
+
+
+
+// ✅ Step 1: Send OTP for Password Reset
+export const sendResetOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        // Check if user exists (Admin ya Vigilance)
+        const email_exist = await User.findOne({ 
+            where: { email_id: email, status: '1', role_id: [1, 2] } 
+        });
+
+        if (!email_exist) {
+            return res.status(404).json({ 
+                status: false, 
+                message: 'This email is not registered as an Admin.' 
+            });
+        }
+
+        // Generate OTP (6 digits)
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Token me OTP aur Email store karo (5 min validity)
+        const otpToken = jwt.sign(
+            { otp, email, purpose: 'password_reset' },
+            process.env.JWT_SECRET,
+            { expiresIn: '5m' }
+        );
+
+        // OTP Email bhejo
+        await sendOtpMail(email, otp);
+
+        return res.status(200).json({
+            status: true,
+            message: 'OTP sent to your email.',
+            otp_token: otpToken
+        });
+    } catch (error) {
+        console.error('Send Reset OTP Error:', error);
+        return res.status(500).json({ status: false, message: 'Internal Server Error' });
+    }
+};
+
+
+
+export const verifyResetOtp = async (req, res) => {
+    try {
+        const { email, otp, otp_token } = req.body;
+        const security = getSecurityContext(req);
+
+        // 1. OTP Token verify karo
+        let decoded;
+        try {
+            decoded = jwt.verify(otp_token, process.env.JWT_SECRET);
+        } catch (e) {
+            return res.status(400).json({ status: false, message: 'OTP expired or invalid.' });
+        }
+
+        // 2. OTP Content verify karo
+        if (decoded.purpose !== 'password_reset' || decoded.email !== email) {
+            return res.status(400).json({ status: false, message: 'Invalid verification request.' });
+        }
+
+        if (decoded.otp !== otp) {
+            return res.status(400).json({ status: false, message: 'Invalid OTP.' });
+        }
+
+        // 3. Reset Token generate karo
+        const resetToken = crypto.randomBytes(32).toString('hex');
+
+        // 4. DB me save karo
+        await PasswordReset.create({
+            email: email,
+            token: resetToken,
+            created_at: new Date()
+        });
+
+        await User.update(
+            { remember_token: resetToken },
+            { where: { email_id: email } }
+        );
+
+        // 5. Reset Link email pe bhejo
+        const resetLink = `${process.env.FRONTEND_URL}/admin/reset-password/${resetToken}`;
+        await sendResetLinkEmail(email, resetLink);
+
+        // ✅ 6. Security Alert bhejo (IP, Time, Device ke saath)
+        const user = await User.findOne({ where: { email_id: email } });
+        if (user) {
+            await sendSecurityAlertEmail(email, {
+                type: 'PASSWORD_RESET',
+                name: user.first_name || 'User',
+                ip: security.ip,
+                userAgent: security.userAgent,
+                timestamp: security.timestamp,
+                extraMessage: 'A password reset link has been sent to your email. Click the link in the other email to reset your password.'
+            });
+        }
+
+        return res.status(200).json({
+            status: true,
+            message: 'Password reset link sent to your email.'
+        });
+
+    } catch (error) {
+        console.error('Verify Reset OTP Error:', error);
+        return res.status(500).json({ status: false, message: 'Internal Server Error' });
     }
 };

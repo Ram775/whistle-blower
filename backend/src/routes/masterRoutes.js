@@ -17,6 +17,21 @@ import { auth, allowRoles } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
+// ✅ PUBLIC ROUTE (Landing Page ke liye)
+router.get('/settings-public', async (req, res) => {
+    try {
+        const settings = await Setting.findAll({
+            where: { master_key: 'config' },
+            attributes: ['config_key', 'config_value']
+        });
+        res.status(200).json({ status: true, data: settings });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'Error fetching settings' });
+    }
+});
+
+
 // ============ STATE ============
 router.get('/states', auth, allowRoles(1, 2), StateController.index);
 router.get('/states/list', DistrictController.getStateList); 
@@ -68,5 +83,7 @@ router.post('/disclosure-details/change_status', auth, allowRoles(1, 2), Closure
 // ============ PUBLIC ROUTES (For Registration) ============
 router.get('/disclosure-details-public', ClosureDetailController.index);
 router.get('/vigilance-angles-public', VigilanceController.index);
+
+
 
 export default router;

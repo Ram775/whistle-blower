@@ -6,7 +6,9 @@ import {
     submitNewComplaint,
     getAllComplaints,
     updateComplaintStatus,
-    getComplaintById 
+    getComplaintById,
+    getMyComplaints,
+    generateComplaintPdf
 } from '../controllers/ComplaintController.js';
 import {
     submitComplaintValidator,
@@ -14,12 +16,18 @@ import {
 } from '../validators/complaintValidator.js';
 import { auth, allowRoles } from '../middlewares/authMiddleware.js';
 import { upload } from '../middlewares/uploadMiddleware.js';
+import { otpSendLimiter, otpVerifyLimiter, checkBlockedIP } from '../middlewares/rateLimiter.js';
+
+
+
+
 
 const router = express.Router();
+router.use(checkBlockedIP);
 
 // Public Routes (registration flow)
-router.post('/send-otp', sendOtp);
-router.post('/verify-otp', verifyOtp);
+router.post('/send-otp',otpSendLimiter, sendOtp);
+router.post('/verify-otp', otpVerifyLimiter, verifyOtp);
 
 // Public complaint submission (with file uploads)
 router.post(
@@ -46,5 +54,8 @@ router.post(
 router.get('/admin/all', auth, allowRoles(1, 2), getAllComplaints);
 router.get('/admin/:id', auth, allowRoles(1, 2), getComplaintById);
 router.put('/admin/:id/status', auth, allowRoles(1, 2), updateComplaintStatus);
+router.get('/my-complaints', auth, allowRoles(3), getMyComplaints);
+router.get('/my-complaints/:id', auth, allowRoles(3), getComplaintById); // Same controller function, bas ID se
+router.get('/pdf/:id', auth, generateComplaintPdf);
 
 export default router;

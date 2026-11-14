@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, FileText, CheckCircle, Clock, Download, AlertCircle } from 'lucide-react';
+import { ArrowLeft, User, FileText, Clock, Download, FileDown } from 'lucide-react';
 import api from '../../api/axios';
+import { complaintService } from '../../services/complaintService'; // ✅ IMPORT ADD KIYA
+import toast from 'react-hot-toast';
 
 const ComplaintView = () => {
     const { id } = useParams();
@@ -10,7 +12,6 @@ const ComplaintView = () => {
     const [loading, setLoading] = useState(true);
     const [updateLoading, setUpdateLoading] = useState(false);
     const [statusData, setStatusData] = useState({ complaint_status: '', comment: '' });
-    const [message, setMessage] = useState({ type: '', text: '' });
 
     useEffect(() => {
         fetchComplaint();
@@ -18,16 +19,17 @@ const ComplaintView = () => {
 
     const fetchComplaint = async () => {
         try {
+            // Yahan bhi service use kar sakte hain, par abhi direct api call chalega
             const response = await api.get(`/complaints/admin/${id}`);
             if (response.data.status) {
                 setComplaint(response.data.data);
                 setStatusData({
-    complaint_status: String(response.data.data.complaint_status), // <-- String kiya
-    comment: ''
-});
+                    complaint_status: String(response.data.data.complaint_status),
+                    comment: ''
+                });
             }
         } catch (error) {
-            console.error(error);
+            toast.error('Failed to load complaint details');
         } finally {
             setLoading(false);
         }
@@ -36,19 +38,26 @@ const ComplaintView = () => {
     const handleStatusUpdate = async (e) => {
         e.preventDefault();
         setUpdateLoading(true);
-        setMessage({ type: '', text: '' });
 
         try {
-            const response = await api.put(`/complaints/admin/${id}/status`, statusData);
-            if (response.data.status) {
-                setMessage({ type: 'success', text: 'Status updated successfully!' });
+            // ✅ Service call
+            const response = await complaintService.updateComplaintStatus(id, statusData);
+            if (response.status) {
+                toast.success('Status updated successfully!');
                 fetchComplaint(); // Refresh data
             }
         } catch (error) {
-            setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to update status' });
+            toast.error(error.response?.data?.message || 'Failed to update status');
         } finally {
             setUpdateLoading(false);
         }
+    };
+
+    // ✅ PDF Download Function
+    const handleDownloadPdf = () => {
+        const token = localStorage.getItem('token');
+        const pdfUrl = `${import.meta.env.VITE_API_BASE_URL}/complaints/pdf/${id}?token=${token}`;
+        window.open(pdfUrl, '_blank');
     };
 
     if (loading) return <div className="text-center mt-10">Loading...</div>;
@@ -61,23 +70,25 @@ const ComplaintView = () => {
 
     return (
         <div className="max-w-5xl mx-auto space-y-6">
-            {/* Header */}
-            <div className="flex items-center space-x-4 mb-6">
-                <button onClick={() => navigate('/admin/complaints')} className="p-2 bg-white rounded-full shadow hover:bg-gray-100">
-                    <ArrowLeft className="w-5 h-5 text-gray-700" />
+            {/* Header with PDF Button */}
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-4">
+                    <button onClick={() => navigate('/admin/complaints')} className="p-2 bg-white rounded-full shadow hover:bg-gray-100">
+                        <ArrowLeft className="w-5 h-5 text-gray-700" />
+                    </button>
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800">Complaint Details</h1>
+                        <p className="text-sm text-gray-500 font-medium">{complaint.complaint_no}</p>
+                    </div>
+                </div>
+                
+                <button 
+                    onClick={handleDownloadPdf}
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-red-700 transition shadow-sm"
+                >
+                    <FileDown className="w-5 h-5 mr-2" /> Download PDF
                 </button>
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Complaint Details</h1>
-                    <p className="text-sm text-gray-500 font-medium">{complaint.complaint_no}</p>
-                </div>
             </div>
-
-            {message.text && (
-                <div className={`p-4 rounded-lg flex items-center ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {message.type === 'success' ? <CheckCircle className="w-5 h-5 mr-2" /> : <AlertCircle className="w-5 h-5 mr-2" />}
-                    {message.text}
-                </div>
-            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Left Column (Details) */}

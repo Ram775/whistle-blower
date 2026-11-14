@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../api/axios';
-import { Shield, Key } from 'lucide-react';
+import { authService } from '../../services/authService';
+import { Shield, Key, AlertTriangle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const UserLogin = () => {
     const [formData, setFormData] = useState({
@@ -10,28 +11,46 @@ const UserLogin = () => {
         id_number: '',
         dob: ''
     });
-    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-
+    const [attemptsLeft, setAttemptsLeft] = useState(null);
+    const [isBlocked, setIsBlocked] = useState(false);
+    
     const navigate = useNavigate();
     const { login } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
         setLoading(true);
+        setAttemptsLeft(null);
+        setIsBlocked(false);
 
         try {
-            // NOTE: Backend me ID Number ko AES-GCM se encrypt karke bhejna hota hai (Laravel logic).
-            // Abhi hum plain bhej rahe hain. Agar backend me decrypt error aaye, toh hume frontend me crypto logic add karna hoga.
-            const response = await api.post('/frontend/account_login', formData);
+            const response = await authService.customerLogin(formData);
             
-            if (response.data.status) {
-                login(response.data.user, response.data.token);
+            if (response.status) {
+                login(response.user, response.token);
+                toast.success(`Welcome back, ${response.user.first_name || 'User'}!`);
                 navigate('/customer/dashboard');
+            } else {
+                toast.error(response.message || 'Login failed.');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Invalid Login Details. Please check your ID and DOB.');
+            const data = err.response?.data;
+
+            // ✅ Agar IP blocked hai
+            if (data?.blocked) {
+                setIsBlocked(true);
+                toast.error("Your IP has been blocked due to too many failed attempts.");
+            } 
+            // ✅ Agar attempts remaining hain
+            else if (data?.attempts_remaining !== undefined) {
+                setAttemptsLeft(data.attempts_remaining);
+                toast.error(data.message || "Invalid Credentials.");
+            } 
+            // ✅ Baaki errors
+            else {
+                toast.error(data?.message || 'Invalid Login Details.');
+            }
         } finally {
             setLoading(false);
         }
@@ -45,8 +64,26 @@ const UserLogin = () => {
                 </div>
                 <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">Whistleblower Login</h2>
                 <p className="text-sm text-center text-gray-500 mb-6">Access your registered complaints</p>
-                
-                {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">{error}</div>}
+
+                {/* ⚠️ Warning: Attempts Left */}
+                {attemptsLeft !== null && attemptsLeft > 0 && (
+                    <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 p-3 rounded-lg mb-4 text-sm flex items-start">
+                        <AlertTriangle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>
+                            <strong>Warning:</strong> Only <strong>{attemptsLeft}</strong> attempt{attemptsLeft !== 1 ? 's' : ''} remaining. After that, your IP will be blocked for 15 minutes.
+                        </span>
+                    </div>
+                )}
+
+                {/* 🚨 Error: IP Blocked */}
+                {isBlocked && (
+                    <div className="bg-red-100 border border-red-400 text-red-800 p-3 rounded-lg mb-4 text-sm flex items-start">
+                        <AlertTriangle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>
+                            🚨 Your IP has been blocked due to too many failed attempts. Please try again after 15 minutes.
+                        </span>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -55,6 +92,7 @@ const UserLogin = () => {
                             value={formData.id_type}
                             onChange={(e) => setFormData({...formData, id_type: e.target.value})}
                             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            disabled={isBlocked}
                         >
                             <option value="PAN Number">PAN Number</option>
                             <option value="Passport Number">Passport Number</option>
@@ -74,6 +112,7 @@ const UserLogin = () => {
                                 className="w-full pl-9 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Enter your ID number"
                                 required 
+                                disabled={isBlocked}
                             />
                         </div>
                     </div>
@@ -85,14 +124,15 @@ const UserLogin = () => {
                             onChange={(e) => setFormData({...formData, dob: e.target.value})}
                             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required 
+                            disabled={isBlocked}
                         />
                     </div>
                     <button 
                         type="submit" 
-                        disabled={loading}
+                        disabled={loading || isBlocked}
                         className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 disabled:bg-blue-300 mt-2"
                     >
-                        {loading ? 'Verifying...' : 'Login'}
+                        {loading ? 'Verifying...' : isBlocked ? 'IP Blocked' : 'Login'}
                     </button>
                 </form>
 
