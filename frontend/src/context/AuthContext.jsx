@@ -1,43 +1,31 @@
-import { createContext, useState, useEffect, useContext } from 'react';
-import api from '../api/axios';
+import { createContext, useState, useContext } from 'react';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
+    // Initial state localStorage se uthao (refresh ke liye)
+    const [user, setUser] = useState(() => {
+        const savedUser = localStorage.getItem('user');
+        return savedUser ? JSON.parse(savedUser) : null;
+    });
     const [token, setToken] = useState(localStorage.getItem('token') || null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchUser = async () => {
-            if (token) {
-                try {
-                    const response = await api.get('/users/profile');
-                    setUser(response.data.data);
-                } catch (error) {
-                    console.error("Auth Error:", error);
-                    logout();
-                }
-            }
-            setLoading(false);
-        };
-        fetchUser();
-    }, [token]);
 
     const login = (userData, userToken) => {
         setUser(userData);
         setToken(userToken);
         localStorage.setItem('token', userToken);
+        localStorage.setItem('user', JSON.stringify(userData));
     };
 
     const logout = () => {
         setUser(null);
         setToken(null);
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, token, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, Filter } from 'lucide-react';
-import { getComplaints } from '../../api/complaintApi';
+import { Eye } from 'lucide-react';
+import { complaintService } from '../../services/complaintService';
 import DataTable from '../../components/admin/DataTable';
+import toast from 'react-hot-toast';
 
 const ComplaintList = () => {
     const [complaints, setComplaints] = useState([]);
@@ -19,13 +20,13 @@ const ComplaintList = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const res = await getComplaints();
+            const res = await complaintService.getAllComplaints();
             if (res.status) {
                 setComplaints(res.data);
                 setFilteredComplaints(res.data);
             }
         } catch (error) {
-            console.error(error);
+            toast.error('Failed to load complaints');
         } finally {
             setLoading(false);
         }
@@ -76,7 +77,6 @@ const ComplaintList = () => {
                 <h1 className="text-2xl font-bold text-gray-800">All Complaints</h1>
             </div>
 
-            {/* Tabs */}
             <div className="flex space-x-2 bg-white p-2 rounded-lg shadow-sm overflow-x-auto">
                 {tabs.map((tab) => (
                     <button
@@ -93,7 +93,6 @@ const ComplaintList = () => {
                 ))}
             </div>
 
-            {/* Table */}
             <DataTable 
                 columns={columns} 
                 data={filteredComplaints} 

@@ -2,6 +2,7 @@ import { Complaint, User, Address, DeterminationofVigilanceAngle, DisclosureDeta
 import { decryptClientIdNumber } from '../utils/encryption.js';
 import { sendOtpMail, sendComplaintEmailToCustomer, sendDisclosureEmail } from '../utils/mailer.js';
 import jwt from 'jsonwebtoken';
+import PDFDocument from 'pdfkit';
 
 const generateComplaintNumber = async () => {
     const latest = await Complaint.findOne({ order: [['id', 'DESC']] });
@@ -312,22 +313,185 @@ export const getComplaintById = async (req, res) => {
     try {
         const complaint = await Complaint.findByPk(req.params.id, {
             include: [
-                { model: User, as: 'user', attributes: ['first_name', 'middle_name', 'last_name', 'email_id', 'mobile_no', 'gender', 'dob', 'id_type', 'id_number', 'id_photo', 'eligibility_of_whistle_blower', 'sr_number', 'organization'] },
-                { model: DeterminationofVigilanceAngle, as: 'determinationofvigilanceangle', attributes: ['name'] },
-                { model: DisclosureDetail, as: 'disclosureDetail', attributes: ['name', 'email'] },
+                { 
+                    model: User, 
+                    as: 'user', 
+                    attributes: ['first_name', 'middle_name', 'last_name', 'email_id', 'mobile_no', 'gender', 'dob', 'id_type', 'id_number', 'id_photo', 'eligibility_of_whistle_blower', 'sr_number', 'organization'] 
+                },
+                { 
+                    model: DeterminationofVigilanceAngle, 
+                    as: 'determinationofvigilanceangle', 
+                    attributes: ['name'] 
+                },
+                { 
+                    model: DisclosureDetail, 
+                    as: 'disclosureDetail', 
+                    attributes: ['name', 'email'] 
+                },
                 { 
                     model: ComplaintStatusHistory, 
                     as: 'complaint_status_history', 
-                    include: [{ model: User, as: 'User', attributes: ['first_name', 'last_name'] }] // ✅ Yahan 'as: "User"' add kiya
+                    include: [{ model: User, as: 'User', attributes: ['first_name', 'last_name'] }] 
                 }
             ]
         });
 
-        if (!complaint) return res.status(404).json({ status: false, message: 'Complaint not found' });
+        if (!complaint) {
+            return res.status(404).json({ status: false, message: 'Complaint not found' });
+        }
+
+        // ✅ Authorization Check
+        // Admin (role 1, 2) sab dekh sakte hain
+        // Customer (role 3) sirf apni complaint dekh sakta hai
+        if (Number(req.user.role_id) === 3 && Number(complaint.user_id) !== Number(req.user.id)) {
+            return res.status(403).json({ status: false, message: 'Unauthorized: You can only view your own complaints.' });
+        }
 
         return res.status(200).json({ status: true, data: complaint });
+
     } catch (error) {
-        console.error(error);
+        console.error('Get Complaint By ID Error:', error);
         return res.status(500).json({ status: false, message: 'Internal Server Error' });
+    }
+};
+
+
+export const getMyComplaints = async (req, res) => {
+    try {
+        const complaints = await Complaint.findAll({
+            where: { user_id: req.user.id },
+            attributes: ['id', 'complaint_no', 'complaint_status', 'created_at', 'complaint_description'],
+            include: [
+                { model: DeterminationofVigilanceAngle, as: 'determinationofvigilanceangle', attributes: ['name'] }
+            ],
+            order: [['created_at', 'DESC']]
+        });
+
+        const formattedData = complaints.map((row, key) => {
+            let statusText = '';
+            if (row.complaint_status == 1) statusText = 'Pending';
+            else if (row.complaint_status == 2) statusText = 'Under Processing';
+            else if (row.complaint_status == 3) statusText = 'Disposed';
+
+            return {
+                id: row.id,
+                srno: key + 1,
+                complaint_no: row.complaint_no,
+                complaint_date: new Date(row.created_at).toLocaleDateString('en-GB'),
+                complaint_status: statusText,
+                event: row.determinationofvigilanceangle ? row.determinationofvigilanceangle.name : 'N/A',
+                complaint_description: row.complaint_description
+            };
+        });
+
+        return res.status(200).json({ status: true, data: formattedData });
+    } catch (error) {
+        console.error('Get My Complaints Error:', error);
+        return res.status(500).json({ status: false, message: 'Internal Server Error' });
+    }
+};
+
+
+
+
+
+export const generateComplaintPdf = async (req, res) => {
+    try {
+        const complaint = await Complaint.findByPk(req.params.id, {
+            include: [
+                { 
+                    model: User, 
+                    as: 'user', 
+                    attributes: ['first_name', 'middle_name', 'last_name', 'email_id', 'mobile_no', 'gender', 'dob', 'id_type', 'id_number', 'id_photo', 'eligibility_of_whistle_blower', 'sr_number', 'organization'] 
+                },
+                { model: DeterminationofVigilanceAngle, as: 'determinationofvigilanceangle', attributes: ['name'] },
+                { model: DisclosureDetail, as: 'disclosureDetail', attributes: ['name'] },
+                { model: ComplaintStatusHistory, as: 'complaint_status_history', include: [{ model: User, as: 'User', attributes: ['first_name', 'last_name'] }] }
+            ]
+        });
+
+        if (!complaint) {
+            return res.status(404).json({ status: false, message: 'Complaint not found' });
+        }
+
+        // ✅ Authorization: Admin ya Owner (Customer) hi PDF dekh sakta hai
+        if (Number(req.user.role_id) === 3 && Number(complaint.user_id) !== Number(req.user.id)) {
+            return res.status(403).json({ status: false, message: 'Unauthorized' });
+        }
+
+        const user = complaint.user || {};
+        const angle = complaint.determinationofvigilanceangle || {};
+        const disclosure = complaint.disclosureDetail || {};
+        const histories = complaint.complaint_status_history || [];
+
+        // PDF Document Create karo
+        const doc = new PDFDocument({ margin: 40 });
+        
+        // Response headers set karo
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=complaint_${complaint.complaint_no.replace(/\//g, '_')}.pdf`);
+        
+        doc.pipe(res);
+
+        // ===== HEADER =====
+        doc.fontSize(20).font('Helvetica-Bold').text('GICRe Whistle-Blower', { align: 'center' });
+        doc.moveDown(0.3);
+        doc.fontSize(12).font('Helvetica').text('Complaint Details Report', { align: 'center' });
+        doc.moveDown(1);
+
+        doc.moveTo(40, doc.y).lineTo(555, doc.y).stroke();
+        doc.moveDown(0.5);
+
+        // ===== COMPLAINT INFO =====
+        doc.fontSize(14).font('Helvetica-Bold').text('Complaint Information', { underline: true });
+        doc.moveDown(0.3);
+        doc.fontSize(10).font('Helvetica');
+        doc.text(`Complaint No: ${complaint.complaint_no}`);
+        doc.text(`Date: ${new Date(complaint.created_at).toLocaleString()}`);
+        doc.text(`Vigilance Angle: ${angle.name || 'N/A'}`);
+        doc.text(`Disclosure Against: ${disclosure.name || 'N/A'}`);
+        doc.moveDown(0.5);
+
+        doc.fontSize(10).font('Helvetica-Bold').text('Description:');
+        doc.fontSize(10).font('Helvetica').text(complaint.complaint_description || 'N/A', { width: 500 });
+        doc.moveDown(0.3);
+
+        doc.fontSize(10).font('Helvetica-Bold').text('Remarks:');
+        doc.fontSize(10).font('Helvetica').text(complaint.remarks || 'N/A', { width: 500 });
+        doc.moveDown(1);
+
+        // ===== COMPLAINANT INFO =====
+        doc.fontSize(14).font('Helvetica-Bold').text('Complainant Information', { underline: true });
+        doc.moveDown(0.3);
+        doc.fontSize(10).font('Helvetica');
+        doc.text(`Name: ${user.first_name || ''} ${user.middle_name || ''} ${user.last_name || ''}`);
+        doc.text(`Email: ${user.email_id || 'N/A'}`);
+        doc.text(`Mobile: ${user.mobile_no || 'N/A'}`);
+        doc.text(`Gender: ${user.gender || 'N/A'}`);
+        doc.text(`DOB: ${user.dob || 'N/A'}`);
+        doc.text(`ID Type: ${user.id_type || 'N/A'}`);
+        doc.text(`ID Number: ${user.id_number || 'N/A'}`);
+        doc.text(`Eligibility: ${user.eligibility_of_whistle_blower || 'N/A'}`);
+        doc.text(`SR Number: ${user.sr_number || 'N/A'}`);
+        doc.moveDown(1);
+
+        // ===== STATUS HISTORY =====
+        if (histories.length > 0) {
+            doc.fontSize(14).font('Helvetica-Bold').text('Status History', { underline: true });
+            doc.moveDown(0.3);
+            histories.forEach((h) => {
+                let statusText = h.complaint_status == 1 ? 'Pending' : h.complaint_status == 2 ? 'Under Processing' : 'Disposed';
+                doc.fontSize(10).font('Helvetica-Bold').text(`${statusText} - ${new Date(h.created_at).toLocaleString()}`);
+                doc.fontSize(9).font('Helvetica').text(`Comment: ${h.comment || 'N/A'}`);
+                doc.fontSize(9).font('Helvetica-Oblique').text(`By: ${h.User ? h.User.first_name + ' ' + h.User.last_name : 'System'}`);
+                doc.moveDown(0.3);
+            });
+        }
+
+        doc.end();
+
+    } catch (error) {
+        console.error('PDF Generation Error:', error);
+        return res.status(500).json({ status: false, message: 'Failed to generate PDF' });
     }
 };

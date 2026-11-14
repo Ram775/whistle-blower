@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../api/axios';
+import { authService } from '../../services/authService'; // ✅ Service
 import { Shield, Key } from 'lucide-react';
+import toast from 'react-hot-toast'; // ✅ Toast
 
 const UserLogin = () => {
     const [formData, setFormData] = useState({
@@ -10,28 +11,26 @@ const UserLogin = () => {
         id_number: '',
         dob: ''
     });
-    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-
     const navigate = useNavigate();
     const { login } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
         setLoading(true);
 
         try {
-            // NOTE: Backend me ID Number ko AES-GCM se encrypt karke bhejna hota hai (Laravel logic).
-            // Abhi hum plain bhej rahe hain. Agar backend me decrypt error aaye, toh hume frontend me crypto logic add karna hoga.
-            const response = await api.post('/frontend/account_login', formData);
+            const response = await authService.customerLogin(formData);
             
-            if (response.data.status) {
-                login(response.data.user, response.data.token);
+            if (response.status) {
+                login(response.user, response.token);
+                toast.success(`Welcome back, ${response.user.first_name || 'User'}!`);
                 navigate('/customer/dashboard');
+            } else {
+                toast.error(response.message || 'Login failed.');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Invalid Login Details. Please check your ID and DOB.');
+            toast.error(err.response?.data?.message || 'Invalid Login Details.');
         } finally {
             setLoading(false);
         }
@@ -45,8 +44,6 @@ const UserLogin = () => {
                 </div>
                 <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">Whistleblower Login</h2>
                 <p className="text-sm text-center text-gray-500 mb-6">Access your registered complaints</p>
-                
-                {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>

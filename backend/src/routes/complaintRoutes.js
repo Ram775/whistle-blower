@@ -6,7 +6,9 @@ import {
     submitNewComplaint,
     getAllComplaints,
     updateComplaintStatus,
-    getComplaintById 
+    getComplaintById,
+    getMyComplaints,
+    generateComplaintPdf
 } from '../controllers/ComplaintController.js';
 import {
     submitComplaintValidator,
@@ -46,5 +48,8 @@ router.post(
 router.get('/admin/all', auth, allowRoles(1, 2), getAllComplaints);
 router.get('/admin/:id', auth, allowRoles(1, 2), getComplaintById);
 router.put('/admin/:id/status', auth, allowRoles(1, 2), updateComplaintStatus);
+router.get('/my-complaints', auth, allowRoles(3), getMyComplaints);
+router.get('/my-complaints/:id', auth, allowRoles(3), getComplaintById); // Same controller function, bas ID se
+router.get('/pdf/:id', auth, generateComplaintPdf);
 
 export default router;

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { UserPlus, Edit, Trash2 } from 'lucide-react';
-import api from '../../api/axios';
+import { userService } from '../../services/userService';
 import DataTable from '../../components/admin/DataTable';
+import toast from 'react-hot-toast';
 
 const UserList = () => {
     const [users, setUsers] = useState([]);
@@ -14,12 +15,12 @@ const UserList = () => {
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/users');
-            if (response.data.status) {
-                setUsers(response.data.data);
+            const response = await userService.getAllUsers();
+            if (response.status) {
+                setUsers(response.data);
             }
         } catch (error) {
-            console.error("Error fetching users:", error);
+            toast.error('Failed to fetch users');
         } finally {
             setLoading(false);
         }
@@ -28,18 +29,14 @@ const UserList = () => {
     const handleStatusToggle = async (id, currentStatus) => {
         const newStatus = currentStatus === '1' ? '0' : '1';
         try {
-            await api.post('/users/change_status', { status_id: id, status: newStatus });
-            fetchUsers(); // Refresh list
+            const response = await userService.changeUserStatus(id, newStatus);
+            if (response.status) {
+                toast.success('User status updated!');
+                fetchUsers();
+            }
         } catch (error) {
-            console.error("Error changing status:", error);
+            toast.error('Failed to update status');
         }
-    };
-
-    const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this user?")) return;
-        // Note: Backend me abhi single delete route nahi hai, but hum status inactive kar sakte hain
-        // Agar multiple delete route hota to yahan use karte
-        alert("Delete functionality will be added soon.");
     };
 
     const columns = [
@@ -65,7 +62,7 @@ const UserList = () => {
             render: (row) => (
                 <div className="flex space-x-2">
                     <button className="text-blue-600 hover:text-blue-800" title="Edit"><Edit className="w-4 h-4" /></button>
-                    <button onClick={() => handleDelete(row.id)} className="text-red-600 hover:text-red-800" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                    <button className="text-red-600 hover:text-red-800" title="Delete"><Trash2 className="w-4 h-4" /></button>
                 </div>
             )
         }
