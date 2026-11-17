@@ -111,7 +111,7 @@ const Dashboard = () => {
     <div className="app_card p-4 bg-[#f8f9fa]">
       <div className="car_header mx-auto">
         <div className="mb-4 flex justify-between">
-          <h2 className="font-bold text-xl text-gray-800">Dashboard Overview</h2>
+          <h2 className="font-bold text-xl text-gray-800">Dashboard </h2>
         </div>
 
         {/* Dashboard Statistics Cards - Dynamic */}

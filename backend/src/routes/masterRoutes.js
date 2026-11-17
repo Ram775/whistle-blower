@@ -4,21 +4,25 @@ import * as DistrictController from '../controllers/DistrictController.js';
 import * as CityController from '../controllers/CityController.js';
 import * as VigilanceController from '../controllers/DeterminationofVigilanceAngleController.js';
 import * as CountryController from '../controllers/CountryController.js';
-import * as ClosureDetailController from '../controllers/ClosureDetailController.js'; // <-- Ye check kar
+import * as ClosureDetailController from '../controllers/ClosureDetailController.js';
 import { 
     stateValidator, 
     districtValidator, 
     cityValidator, 
     vigilanceAngleValidator, 
     countryValidator,
-    disclosureDetailValidator // <-- Ye check kar
+    disclosureDetailValidator
 } from '../validators/masterValidator.js';
 import { auth, allowRoles } from '../middlewares/authMiddleware.js';
+import { masterReadLimiter, masterWriteLimiter } from '../middlewares/rateLimiter.js'; // ✅ Rate limiters
+import { Setting } from '../models/index.js'; // ✅ Setting model import
 
 const router = express.Router();
 
-// ✅ PUBLIC ROUTE (Landing Page ke liye)
-router.get('/settings-public', async (req, res) => {
+// ============ PUBLIC ROUTES (No Auth) ============
+
+// Settings for Landing Page
+router.get('/settings-public', masterReadLimiter, async (req, res) => {
     try {
         const settings = await Setting.findAll({
             where: { master_key: 'config' },
@@ -31,59 +35,58 @@ router.get('/settings-public', async (req, res) => {
     }
 });
 
+// Public Dropdowns (Registration ke liye)
+router.get('/disclosure-details-public', masterReadLimiter, ClosureDetailController.index);
+router.get('/vigilance-angles-public', masterReadLimiter, VigilanceController.index);
+router.get('/states/list', masterReadLimiter, DistrictController.getStateList);
+router.get('/countries/list', masterReadLimiter, StateController.getCountryList);
+router.post('/districts/get_list', masterReadLimiter, DistrictController.get_district_list);
+router.post('/cities/get_list', masterReadLimiter, CityController.get_city_list);
+router.post('/cities/check_duplication', masterReadLimiter, CityController.check_city_name_duplication);
+
+// ============ PROTECTED ROUTES ============
+router.use(auth);
 
 // ============ STATE ============
-router.get('/states', auth, allowRoles(1, 2), StateController.index);
-router.get('/states/list', DistrictController.getStateList); 
-router.get('/countries/list', StateController.getCountryList);
-router.post('/states', auth, allowRoles(1, 2), stateValidator, StateController.store);
-router.put('/states/:id', auth, allowRoles(1, 2), stateValidator, StateController.update);
-router.post('/states/multiple_delete', auth, allowRoles(1, 2), StateController.multipleDelete);
-router.post('/states/change_status', auth, allowRoles(1, 2), StateController.changeStatus);
+router.get('/states', allowRoles(1, 2), masterReadLimiter, StateController.index);
+router.post('/states', allowRoles(1, 2), masterWriteLimiter, stateValidator, StateController.store);
+router.put('/states/:id', allowRoles(1, 2), masterWriteLimiter, stateValidator, StateController.update);
+router.post('/states/multiple_delete', allowRoles(1, 2), masterWriteLimiter, StateController.multipleDelete);
+router.post('/states/change_status', allowRoles(1, 2), masterWriteLimiter, StateController.changeStatus);
 
 // ============ DISTRICT ============
-router.get('/districts', auth, allowRoles(1, 2), DistrictController.index);
-router.post('/districts/get_list', DistrictController.get_district_list);
-router.post('/districts', auth, allowRoles(1, 2), districtValidator, DistrictController.store);
-router.put('/districts/:id', auth, allowRoles(1, 2), districtValidator, DistrictController.update);
-router.post('/districts/multiple_delete', auth, allowRoles(1, 2), DistrictController.multipleDelete);
-router.post('/districts/change_status', auth, allowRoles(1, 2), DistrictController.changeStatus);
+router.get('/districts', allowRoles(1, 2), masterReadLimiter, DistrictController.index);
+router.post('/districts', allowRoles(1, 2), masterWriteLimiter, districtValidator, DistrictController.store);
+router.put('/districts/:id', allowRoles(1, 2), masterWriteLimiter, districtValidator, DistrictController.update);
+router.post('/districts/multiple_delete', allowRoles(1, 2), masterWriteLimiter, DistrictController.multipleDelete);
+router.post('/districts/change_status', allowRoles(1, 2), masterWriteLimiter, DistrictController.changeStatus);
 
 // ============ CITY ============
-router.get('/cities', auth, allowRoles(1, 2), CityController.index);
-router.post('/cities/get_list', CityController.get_city_list);
-router.post('/cities/check_duplication', CityController.check_city_name_duplication);
-router.post('/cities', auth, allowRoles(1, 2), cityValidator, CityController.store);
-router.put('/cities/:id', auth, allowRoles(1, 2), cityValidator, CityController.update);
-router.post('/cities/multiple_delete', auth, allowRoles(1, 2), CityController.multipleDelete);
-router.post('/cities/change_status', auth, allowRoles(1, 2), CityController.changeStatus);
+router.get('/cities', allowRoles(1, 2), masterReadLimiter, CityController.index);
+router.post('/cities', allowRoles(1, 2), masterWriteLimiter, cityValidator, CityController.store);
+router.put('/cities/:id', allowRoles(1, 2), masterWriteLimiter, cityValidator, CityController.update);
+router.post('/cities/multiple_delete', allowRoles(1, 2), masterWriteLimiter, CityController.multipleDelete);
+router.post('/cities/change_status', allowRoles(1, 2), masterWriteLimiter, CityController.changeStatus);
 
 // ============ VIGILANCE ANGLE ============
-router.get('/vigilance-angles', auth, allowRoles(1, 2), VigilanceController.index);
-router.post('/vigilance-angles', auth, allowRoles(1, 2), vigilanceAngleValidator, VigilanceController.store);
-router.put('/vigilance-angles/:id', auth, allowRoles(1, 2), vigilanceAngleValidator, VigilanceController.update);
-router.post('/vigilance-angles/multiple_delete', auth, allowRoles(1, 2), VigilanceController.multipleDelete);
-router.post('/vigilance-angles/change_status', auth, allowRoles(1, 2), VigilanceController.changeStatus);
+router.get('/vigilance-angles', allowRoles(1, 2), masterReadLimiter, VigilanceController.index);
+router.post('/vigilance-angles', allowRoles(1, 2), masterWriteLimiter, vigilanceAngleValidator, VigilanceController.store);
+router.put('/vigilance-angles/:id', allowRoles(1, 2), masterWriteLimiter, vigilanceAngleValidator, VigilanceController.update);
+router.post('/vigilance-angles/multiple_delete', allowRoles(1, 2), masterWriteLimiter, VigilanceController.multipleDelete);
+router.post('/vigilance-angles/change_status', allowRoles(1, 2), masterWriteLimiter, VigilanceController.changeStatus);
 
 // ============ COUNTRY ============
-router.get('/countries', auth, allowRoles(1, 2), CountryController.index);
-router.post('/countries', auth, allowRoles(1, 2), countryValidator, CountryController.store);
-router.put('/countries/:id', auth, allowRoles(1, 2), countryValidator, CountryController.update);
-router.post('/countries/multiple_delete', auth, allowRoles(1, 2), CountryController.multipleDelete);
-router.post('/countries/change_status', auth, allowRoles(1, 2), CountryController.changeStatus);
+router.get('/countries', allowRoles(1, 2), masterReadLimiter, CountryController.index);
+router.post('/countries', allowRoles(1, 2), masterWriteLimiter, countryValidator, CountryController.store);
+router.put('/countries/:id', allowRoles(1, 2), masterWriteLimiter, countryValidator, CountryController.update);
+router.post('/countries/multiple_delete', allowRoles(1, 2), masterWriteLimiter, CountryController.multipleDelete);
+router.post('/countries/change_status', allowRoles(1, 2), masterWriteLimiter, CountryController.changeStatus);
 
 // ============ DISCLOSURE DETAILS ============
-router.get('/disclosure-details', auth, allowRoles(1, 2), ClosureDetailController.index);
-router.post('/disclosure-details', auth, allowRoles(1, 2), disclosureDetailValidator, ClosureDetailController.store);
-router.put('/disclosure-details/:id', auth, allowRoles(1, 2), disclosureDetailValidator, ClosureDetailController.update);
-router.post('/disclosure-details/multiple_delete', auth, allowRoles(1, 2), ClosureDetailController.multipleDelete);
-router.post('/disclosure-details/change_status', auth, allowRoles(1, 2), ClosureDetailController.changeStatus);
-
-
-// ============ PUBLIC ROUTES (For Registration) ============
-router.get('/disclosure-details-public', ClosureDetailController.index);
-router.get('/vigilance-angles-public', VigilanceController.index);
-
-
+router.get('/disclosure-details', allowRoles(1, 2), masterReadLimiter, ClosureDetailController.index);
+router.post('/disclosure-details', allowRoles(1, 2), masterWriteLimiter, disclosureDetailValidator, ClosureDetailController.store);
+router.put('/disclosure-details/:id', allowRoles(1, 2), masterWriteLimiter, disclosureDetailValidator, ClosureDetailController.update);
+router.post('/disclosure-details/multiple_delete', allowRoles(1, 2), masterWriteLimiter, ClosureDetailController.multipleDelete);
+router.post('/disclosure-details/change_status', allowRoles(1, 2), masterWriteLimiter, ClosureDetailController.changeStatus);
 
 export default router;

@@ -169,7 +169,7 @@ const Sidebar = ({ collapsed, setCollapsed, NavData = [] }) => {
   const handleLogoutAction = () => {
     setIsLogoutModelOpen(false);
     // Yahan apna logout logic dalna (jaise authService.manualLogout())
-    navigate("/login");
+    navigate("/");
   };
 
   return (
@@ -361,8 +361,8 @@ const Sidebar = ({ collapsed, setCollapsed, NavData = [] }) => {
                 onClick={() => {
                   navigate(
                     userRole === "User"
-                      ? "/user/edit-profile"
-                      : "/admin/dashboard"
+                      ? "/user/profile"
+                      : "/admin/profile"
                   );
                   handleMobileClose();
                 }}

@@ -7,14 +7,18 @@ import {
 } from "../validators/settingValidator.js";
 import { auth, allowRoles } from "../middlewares/authMiddleware.js";
 import { upload } from "../middlewares/uploadMiddleware.js";
-import { Slider, Setting } from "../models/index.js"; // ✅ ES Module import
+import { Slider, Setting } from "../models/index.js";
+import {
+  settingsReadLimiter,   // ✅ Add
+  settingsWriteLimiter,  // ✅ Add
+  masterReadLimiter      // ✅ Public routes ke liye
+} from "../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
 // ================= PUBLIC ROUTES =================
 
-// ✅ Public Sliders
-router.get("/sliders-public", async (req, res) => {
+router.get("/sliders-public", masterReadLimiter, async (req, res) => {
   try {
     const sliders = await Slider.findAll({
       where: { status: "1" },
@@ -27,8 +31,7 @@ router.get("/sliders-public", async (req, res) => {
   }
 });
 
-// ✅ Public Settings
-router.get("/settings-public", async (req, res) => {
+router.get("/settings-public", masterReadLimiter, async (req, res) => {
   try {
     const settings = await Setting.findAll({
       where: { master_key: "config" },
@@ -46,15 +49,15 @@ router.use(auth);
 router.use(allowRoles(1, 2));
 
 // Settings
-router.get("/settings", SettingController.index);
-router.post("/settings", settingValidator, SettingController.setting_submit);
+router.get("/settings", settingsReadLimiter, SettingController.index);
+router.post("/settings", settingsWriteLimiter, settingValidator, SettingController.setting_submit);
 
 // Sliders
-router.get("/sliders", SliderController.index);
-router.post("/sliders", sliderValidator, SliderController.store);
-router.put("/sliders/:id", sliderValidator, SliderController.update);
-router.post("/sliders/multiple_delete", SliderController.multipleDelete);
-router.post("/sliders/change_status", SliderController.changeStatus);
-router.post("/sliders/delete_image", SliderController.delete_image);
+router.get("/sliders", settingsReadLimiter, SliderController.index);
+router.post("/sliders", settingsWriteLimiter, sliderValidator, SliderController.store);
+router.put("/sliders/:id", settingsWriteLimiter, sliderValidator, SliderController.update);
+router.post("/sliders/multiple_delete", settingsWriteLimiter, SliderController.multipleDelete);
+router.post("/sliders/change_status", settingsWriteLimiter, SliderController.changeStatus);
+router.post("/sliders/delete_image", settingsWriteLimiter, SliderController.delete_image);
 
 export default router;

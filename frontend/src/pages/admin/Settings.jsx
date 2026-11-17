@@ -94,11 +94,11 @@ const Settings = () => {
   }
 
   return (
-    <div className="w-full mx-auto space-y-6">
+    <div className="w-full app_card  mx-auto space-y-6">
      
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-800">Settings Management</h1>
+      <div className="flex  flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h2 className="text-2xl  font-bold text-gray-800">Settings Management</h2>
       </div>
 
       {/* Tabs (Modern Pill Style) */}

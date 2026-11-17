@@ -25,6 +25,7 @@ import Profile from "./pages/admin/Profile";
 import ForgotPassword from "./pages/admin/ForgotPassword";
 import ResetPassword from "./pages/admin/ResetPassword";
 import LandingPage from "./pages/customer/LandingPage";
+import ChangePassword from "./pages/auth/ChangePassword";
 
 const App = () => {
   return (
@@ -76,6 +77,8 @@ const App = () => {
             <Route path="/admin/master" element={<MasterData />} />
             <Route path="/admin/settings" element={<Settings />} />
             <Route path="/admin/profile" element={<Profile />} />
+            <Route path="/admin/change-password" element={<ChangePassword />} />
+
           </Route>
         </Route>
 

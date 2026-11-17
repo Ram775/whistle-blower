@@ -13,6 +13,10 @@ dotenv.config();
 
 const app = express();
 
+// ✅ Trust Proxy (Production me Nginx/Cloudflare/Load Balancer ke liye MUST)
+// Iske bina rate limiting sahi se IP detect nahi kar payegi
+app.set('trust proxy', 1);
+
 // ✅ Ensure logs folder exists
 const logDir = path.join(process.cwd(), 'logs');
 if (!fs.existsSync(logDir)) {
@@ -65,7 +69,6 @@ app.use(multerErrorHandler);
 
 // Global errors
 app.use((err, req, res, next) => {
-    // ✅ Custom Logger se log karo
     logger.error(`${err.message} | ${req.method} ${req.url} | IP: ${req.ip}`);
     
     res.status(500).json({
