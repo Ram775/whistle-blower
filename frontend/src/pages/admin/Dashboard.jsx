@@ -101,12 +101,15 @@ const Dashboard = () => {
   const totalPages = Math.ceil(recentComplaints.length / perPage) || 1;
 
   return (
-    <div className="p-4 sm:p-6 bg-white min-h-screen">
+    <div className="app_card bg-slate-50/30 overflow-hidden rounded-lg border border-gray-200 shadow-md bg-white">
       {/* HEADER */}
-      <div className="mb-6">
-        <h2 className="text-[22px] font-bold text-[#1b2a5e]">Dashboard</h2>
+     <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+        <h2 className="text-lg text-[#1b2a5e]">Dashboard</h2>
       </div>
 
+
+
+<div className="p-4 md:p-5 space-y-3 ">
       {/* STATS CARDS */}
       <div className="mb-8">
         {loading ? (
@@ -286,6 +289,7 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 };

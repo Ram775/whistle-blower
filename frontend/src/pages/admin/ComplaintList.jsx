@@ -284,7 +284,7 @@ export default function ComplaintList() {
   return (
     <div className="bg-white app_card rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="flex card_header items-center justify-between px-5 py-4 border-b border-gray-200">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
         <h2 className="text-lg font-bold text-[#1b2a5e]">All Complaints</h2>
       </div>
 
