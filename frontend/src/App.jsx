@@ -26,6 +26,7 @@ import ForgotPassword from "./pages/admin/ForgotPassword";
 import ResetPassword from "./pages/admin/ResetPassword";
 import LandingPage from "./pages/customer/LandingPage";
 import ChangePassword from "./pages/auth/ChangePassword";
+import UserLayout from "./layouts/UserLayout";
 
 const App = () => {
   return (
@@ -78,18 +79,19 @@ const App = () => {
             <Route path="/admin/settings" element={<Settings />} />
             <Route path="/admin/profile" element={<Profile />} />
             <Route path="/admin/change-password" element={<ChangePassword />} />
-
           </Route>
         </Route>
 
         {/* ================= CUSTOMER PROTECTED ROUTES ================= */}
         <Route element={<ProtectedRoute allowedRoles={[3]} />}>
-          <Route path="/customer/dashboard" element={<CustomerDashboard />} />
-          <Route path="/customer/new-complaint" element={<NewComplaint />} />
-          <Route
-            path="/customer/complaint/:id"
-            element={<CustomerComplaintView />}
-          />
+          <Route element={<UserLayout />}>
+            <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+            <Route path="/customer/new-complaint" element={<NewComplaint />} />
+            <Route
+              path="/customer/complaint/:id"
+              element={<CustomerComplaintView />}
+            />
+          </Route>
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

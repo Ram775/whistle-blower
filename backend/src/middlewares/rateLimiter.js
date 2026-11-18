@@ -36,7 +36,7 @@ const makeHandler = (message) => (req, res) => {
 
 // ================= GLOBAL =================
 export const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 min
+    windowMs: 15 * 60 * 5, // 15 min
     max: 100, // 100 requests
     keyGenerator: (req) => ipKeyGenerator(req.ip),
     standardHeaders: 'draft-7',
