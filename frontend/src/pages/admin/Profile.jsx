@@ -45,24 +45,24 @@ const Profile = () => {
 
   // Common Input Class for consistency
   const inputClass =
-    "w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all";
+    "w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all";
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">My Profile</h1>
+        <h1 className="text-lg font-bold text-[#1b2a5e]">My Profile</h1>
       </div>
 
       {/* Full Width Card (No grid now, since only 1 card is left) */}
-      <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-200">
+      <div className="bg-white p-6 md:p-8 rounded-lg shadow-sm border border-gray-200">
         
         {/* Header */}
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-          <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-blue-50 text-[#1b2a5e] flex items-center justify-center">
             <User size={24} />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-800">Update Profile</h2>
+            <h2 className="text-base font-bold text-[#1b2a5e]">Update Profile</h2>
             <p className="text-sm text-gray-500">Update your personal information here.</p>
           </div>
         </div>
@@ -72,7 +72,7 @@ const Profile = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
                 First Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -85,7 +85,7 @@ const Profile = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Last Name</label>
               <input
                 type="text"
                 value={profileData.last_Name}
@@ -95,7 +95,7 @@ const Profile = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Email Address <span className="text-red-500">*</span>
               </label>
               <input
@@ -108,7 +108,7 @@ const Profile = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Mobile Number</label>
               <input
                 type="text"
                 value={profileData.mobile_no}
@@ -123,7 +123,7 @@ const Profile = () => {
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 text-sm font-medium shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 bg-[#1b2a5e] text-white px-6 py-2 rounded hover:bg-blue-800 text-sm font-semibold shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
