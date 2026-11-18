@@ -11,9 +11,9 @@ const ensureDir = (dir) => {
 // Storage: Initial temporary folder
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const tempPath = path.join(process.cwd(), 'uploads', 'temp');
-        ensureDir(tempPath);
-        cb(null, tempPath);
+        const storagePath = path.join(process.cwd(), 'uploads', 'complaintdocument');
+        ensureDir(storagePath);
+        cb(null, storagePath);
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

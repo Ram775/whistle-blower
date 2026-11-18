@@ -143,7 +143,7 @@ const ComplaintView = () => {
               {complaint.complaint_document && (
                 <div className="sm:col-span-2 mt-2 pt-4 border-t border-gray-100">
                   <a
-                    href={`${import.meta.env.VITE_UPLOAD_BASE_URL}/complaintdocument/${complaint.complaint_document}`}
+                    href={`${import.meta.env.VITE_UPLOAD_BASE_URL}/${complaint.complaint_document}`}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center text-sm font-semibold text-[#1b2a5e] hover:text-blue-800 hover:underline bg-blue-50 px-4 py-2 rounded transition-colors border border-blue-100"

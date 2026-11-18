@@ -73,7 +73,7 @@ const CustomerComplaintView = () => {
                             <p className="bg-gray-50 p-3 rounded mt-1 text-sm">{complaint.remarks || 'N/A'}</p>
                         </div>
                         {complaint.complaint_document && (
-                            <a href={`${import.meta.env.VITE_UPLOAD_BASE_URL}/complaintdocument/${complaint.complaint_document}`} target="_blank" rel="noreferrer" className="inline-flex items-center text-blue-600 hover:underline">
+                            <a href={`${import.meta.env.VITE_UPLOAD_BASE_URL}/${complaint.complaint_document}`} target="_blank" rel="noreferrer" className="inline-flex items-center text-blue-600 hover:underline">
                                 <Download className="w-4 h-4 mr-1" /> Download Complaint Document
                             </a>
                         )}
