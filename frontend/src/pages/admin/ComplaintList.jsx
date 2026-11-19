@@ -14,8 +14,9 @@ import ListRow from "../../components/ui/ListRow";
 import ListPagination from "../../components/ui/ListPagination";
 import TableFilters from "../../components/ui/TableFilters"; 
 import { complaintService } from "../../services/complaintService";
-import toast from "react-hot-toast";
+
 import TextHighlighter from "../../components/ui/TextHighlighter";
+
 
 export default function ComplaintList() {
   const [apiData, setApiData] = useState([]);
@@ -37,7 +38,7 @@ export default function ComplaintList() {
       const res = await complaintService.getAllComplaints();
       if (res.status) setApiData(res.data || []);
     } catch (error) {
-      toast.error("Failed to load complaints");
+      notify.error("Failed to load complaints");
     } finally {
       setLoading(false);
     }

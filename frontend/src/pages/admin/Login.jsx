@@ -12,7 +12,8 @@ import {
   ArrowRight, 
   UserCheck 
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { notify } from "../../utils/notify";
+
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -39,10 +40,10 @@ const Login = () => {
 
       if (response.status) {
         login(response.user, response.token);
-        toast.success("Login Successful! Welcome back.");
+        notify.success("Login Successful! Welcome back.");
         navigate("/admin/dashboard");
       } else {
-        toast.error(response.message || "Login failed.");
+        notify.error(response.message || "Login failed.");
       }
     } catch (err) {
       const data = err.response?.data;
@@ -50,12 +51,12 @@ const Login = () => {
       // IP Blocked
       if (data?.blocked) {
         setIsBlocked(true);
-        toast.error(data.message || "Your IP has been blocked. Try again after 15 minutes.");
+        notify.error(data.message || "Your IP has been blocked. Try again after 15 minutes.");
       } 
       // Attempts Remaining
       else if (data?.attempts_remaining !== undefined) {
         setAttemptsLeft(data.attempts_remaining);
-        toast.error(data.message || "Invalid Credentials.");
+        notify.error(data.message || "Invalid Credentials.");
         
         if (data.attempts_remaining === 0) {
           setIsBlocked(true);
@@ -63,7 +64,7 @@ const Login = () => {
       } 
       // Other errors
       else {
-        toast.error(data?.message || "Invalid Credentials. Please check.");
+        notify.error(data?.message || "Invalid Credentials. Please check.");
       }
     } finally {
       setLoading(false);

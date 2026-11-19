@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 import api from '../../api/axios';
-import toast from 'react-hot-toast';
+import { notify } from '../../utils/notify';
+
 
 const ResetPassword = () => {
     const { token } = useParams();
@@ -13,18 +14,18 @@ const ResetPassword = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (formData.new_password !== formData.confirm_new_password) {
-            toast.error('Passwords do not match');
+            notify.error('Passwords do not match');
             return;
         }
         setLoading(true);
         try {
             const response = await api.post(`/users/reset-password/${token}`, formData);
             if (response.data.status) {
-                toast.success('Password reset successfully! Please login.');
+                notify.success('Password reset successfully! Please login.');
                 navigate('/admin/login');
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Invalid or expired token');
+            notify.error(error.response?.data?.message || 'Invalid or expired token');
         } finally {
             setLoading(false);
         }

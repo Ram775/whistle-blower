@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { masterService } from "../../services/masterService";
 import { complaintService } from "../../services/complaintService";
-import toast from "react-hot-toast";
+import { notify } from "../../utils/notify"; // 👈 Custom notify import
 
 const Registration = () => {
   const navigate = useNavigate();
@@ -81,7 +81,7 @@ const Registration = () => {
         if (angleRes.data) setAngles(angleRes.data);
         if (stateRes.data) setStates(stateRes.data);
       } catch (err) {
-        toast.error("Failed to load form data");
+        notify.error("Failed to load form data");
       }
     };
     fetchDropdowns();
@@ -102,7 +102,7 @@ const Registration = () => {
         const response = await masterService.getDistrictsByState(stateId);
         if (response.data) setDistricts(response.data);
       } catch (err) {
-        toast.error("Failed to load districts");
+        notify.error("Failed to load districts");
       }
     }
   };
@@ -116,7 +116,7 @@ const Registration = () => {
         const response = await masterService.getCitiesByDistrict(districtId);
         if (response.data) setCities(response.data);
       } catch (err) {
-        toast.error("Failed to load cities");
+        notify.error("Failed to load cities");
       }
     }
   };
@@ -133,7 +133,7 @@ const Registration = () => {
   const handleSendOtp = async (e) => {
     e.preventDefault();
     if (!email || !email.includes("@")) {
-      toast.error("Please enter a valid email address.");
+      notify.error("Please enter a valid email address.");
       return;
     }
     setLoading(true);
@@ -141,10 +141,10 @@ const Registration = () => {
       const response = await complaintService.sendOtp(email);
       if (response.success) {
         setOtpToken(response.otp_token);
-        toast.success("OTP sent to your email. Please check.");
+        notify.success("OTP sent to your email. Please check.");
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to send OTP");
+      notify.error(err.response?.data?.message || "Failed to send OTP");
     } finally {
       setLoading(false);
     }
@@ -153,7 +153,7 @@ const Registration = () => {
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     if (!otp || otp.length !== 6) {
-      toast.error("Please enter a valid 6-digit OTP.");
+      notify.error("Please enter a valid 6-digit OTP.");
       return;
     }
     setLoading(true);
@@ -162,25 +162,22 @@ const Registration = () => {
       if (response.success) {
         setVerifiedToken(response.verified_token);
         setStep(2);
-        toast.success("Email verified successfully!");
+        notify.success("Email verified successfully!");
       }
     } catch (err) {
       const data = err.response?.data;
 
       // ✅ Naya Logic: Agar email already registered hai
       if (data?.email_registered) {
-        // 1. Custom message toast (info style)
-        toast.error(data.message, {
-          duration: 5000,
-          icon: "ℹ️",
-        });
-
+        // Custom icon ki jagah warning use kiya hai
+        notify.warning(data.message || "This email is already registered.");
+        
         // 2. User ko 2 second baad /login pe redirect kar do
         setTimeout(() => {
           navigate("/login");
         }, 2000);
       } else {
-        toast.error(data?.message || "Invalid OTP. Please try again.");
+        notify.error(data?.message || "Invalid OTP. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -200,7 +197,7 @@ const Registration = () => {
   const handleNext = (e) => {
     e.preventDefault();
     if (formData.city_id === "0" && !formData.city_name.trim()) {
-      toast.error("Please enter city name for 'Other' option");
+      notify.error("Please enter city name for 'Other' option");
       return;
     }
     setStep(step + 1);
@@ -217,7 +214,7 @@ const Registration = () => {
     setLoading(true);
 
     if (!idPhoto) {
-      toast.error("ID Photo is required. Please upload a file.");
+      notify.error("ID Photo is required. Please upload a file.");
       setLoading(false);
       return;
     }
@@ -234,13 +231,13 @@ const Registration = () => {
     try {
       const response = await complaintService.submitComplaint(submitData);
       if (response.success) {
-        toast.success(
+        notify.success(
           `Complaint registered! Your Complaint No: ${response.complaint_no}`,
         );
         navigate("/login");
       }
     } catch (err) {
-      toast.error(
+      notify.error(
         err.response?.data?.message || "Failed to register complaint.",
       );
     } finally {

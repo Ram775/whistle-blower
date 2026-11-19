@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, ArrowLeft, KeyRound } from 'lucide-react';
 import api from '../../api/axios';
-import toast from 'react-hot-toast';
+import { notify } from '../../utils/notify';
+
 
 const ForgotPassword = () => {
     const navigate = useNavigate();
@@ -21,10 +22,10 @@ const ForgotPassword = () => {
             if (response.data.status) {
                 setOtpToken(response.data.otp_token);
                 setStep(2);
-                toast.success('OTP sent to your email!');
+                notify.success('OTP sent to your email!');
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Email not registered');
+            notify.error(error.response?.data?.message || 'Email not registered');
         } finally {
             setLoading(false);
         }
@@ -39,11 +40,11 @@ const ForgotPassword = () => {
                 email, otp, otp_token: otpToken 
             });
             if (response.data.status) {
-                toast.success('OTP verified! Reset link sent to your email.');
+                notify.success('OTP verified! Reset link sent to your email.');
                 setTimeout(() => navigate('/admin/login'), 2000);
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Invalid OTP');
+            notify.error(error.response?.data?.message || 'Invalid OTP');
         } finally {
             setLoading(false);
         }

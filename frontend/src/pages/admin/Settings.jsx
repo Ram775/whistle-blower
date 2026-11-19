@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Save, Upload, X, Building2, Globe, ImageIcon, Loader2 } from "lucide-react";
 import { settingsService } from "../../services/settingsService";
-import toast from "react-hot-toast";
+import { notify } from "../../utils/notify";
+
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("general");
@@ -28,7 +29,7 @@ const Settings = () => {
         setFormData(obj);
       }
     } catch (error) {
-      toast.error("Failed to load settings");
+      notify.error("Failed to load settings");
     } finally {
       setLoading(false);
     }
@@ -40,10 +41,10 @@ const Settings = () => {
     try {
       const response = await settingsService.updateSettings(formData);
       if (response.status) {
-        toast.success("Settings saved successfully!");
+        notify.success("Settings saved successfully!");
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to save settings");
+      notify.error(error.response?.data?.message || "Failed to save settings");
     } finally {
       setSaving(false);
     }
@@ -62,10 +63,10 @@ const Settings = () => {
       const response = await settingsService.uploadSingleImage(uploadData);
       if (response.status) {
         setFormData({ ...formData, [fieldName]: response.filename });
-        toast.success("Image uploaded successfully!");
+        notify.success("Image uploaded successfully!");
       }
     } catch (error) {
-      toast.error("Image upload failed");
+      notify.error("Image upload failed");
     } finally {
       setUploading(false);
     }
@@ -78,9 +79,9 @@ const Settings = () => {
     try {
       await settingsService.removeSingleImage(currentImage);
       setFormData({ ...formData, [fieldName]: "" });
-      toast.success("Image removed");
+      notify.success("Image removed");
     } catch (error) {
-      toast.error("Failed to remove image");
+      notify.error("Failed to remove image");
     }
   };
 

@@ -4,7 +4,7 @@ import { FileText, Plus, LogOut, Eye, Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { complaintService } from "../../services/complaintService";
 import { notify } from "../../utils/notify";
-import toast from "react-hot-toast";
+
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
@@ -16,6 +16,7 @@ import ListRow from "../../components/ui/ListRow";
 import ListPagination from "../../components/ui/ListPagination";
 import TableFilters from "../../components/ui/TableFilters";
 import TextHighlighter from "../../components/ui/TextHighlighter";
+
 
 const CustomerDashboard = () => {
   const { user, logout } = useAuth();
@@ -42,7 +43,7 @@ const CustomerDashboard = () => {
         setApiData(response.data || []);
       }
     } catch (error) {
-      toast.error("Failed to load complaints");
+      notify.error("Failed to load complaints");
     } finally {
       setLoading(false);
     }

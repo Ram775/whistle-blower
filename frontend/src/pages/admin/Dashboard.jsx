@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { userService } from "../../services/userService";
 import { complaintService } from "../../services/complaintService";
-import toast from "react-hot-toast";
+
 import { Tooltip } from "antd";
 
 // UI Components
@@ -19,6 +19,7 @@ import ListTable from "../../components/ui/ListTable";
 import ListHeader from "../../components/ui/ListHeader";
 import ListRow from "../../components/ui/ListRow";
 import ListPagination from "../../components/ui/ListPagination";
+import { notify } from "../../utils/notify";
 
 const Dashboard = () => {
   const [statsData, setStatsData] = useState({
@@ -48,7 +49,7 @@ const Dashboard = () => {
           setRecentComplaints(complaintsRes.data.reverse().slice(0, 5));
         }
       } catch (error) {
-        toast.error("Failed to load dashboard");
+        notify.error("Failed to load dashboard");
       } finally {
         setLoading(false);
       }

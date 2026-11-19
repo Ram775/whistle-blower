@@ -3,7 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, User, FileText, Clock, Download, FileDown, Loader2, ShieldAlert } from "lucide-react";
 import api from "../../api/axios";
 import { complaintService } from "../../services/complaintService";
-import toast from "react-hot-toast";
+import { notify } from "../../utils/notify";
+
 
 const ComplaintView = () => {
   const { id } = useParams();
@@ -28,7 +29,7 @@ const ComplaintView = () => {
         });
       }
     } catch (error) {
-      toast.error("Failed to load complaint details");
+      notify.error("Failed to load complaint details");
     } finally {
       setLoading(false);
     }
@@ -40,11 +41,11 @@ const ComplaintView = () => {
     try {
       const response = await complaintService.updateComplaintStatus(id, statusData);
       if (response.status) {
-        toast.success("Status updated successfully!");
+        notify.success("Status updated successfully!");
         fetchComplaint(); // Refresh data
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update status");
+      notify.error(error.response?.data?.message || "Failed to update status");
     } finally {
       setUpdateLoading(false);
     }

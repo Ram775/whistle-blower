@@ -15,6 +15,7 @@ import {
 import { complaintService } from '../../services/complaintService';
 import { masterService } from '../../services/masterService';
 import toast from 'react-hot-toast';
+import { notify } from '../../utils/notify';
 
 const NewComplaint = () => {
     const navigate = useNavigate();
@@ -46,7 +47,7 @@ const NewComplaint = () => {
                 if (disclosureRes.data) setDisclosures(disclosureRes.data);
                 if (angleRes.data) setAngles(angleRes.data);
             } catch (err) {
-                toast.error('Failed to load form data');
+                notify.error('Failed to load form data');
             }
         };
         fetchData();
@@ -63,10 +64,10 @@ const NewComplaint = () => {
             if (response.success) {
                 setOtpToken(response.otp_token);
                 setOtpSent(true);
-                toast.success('OTP sent to your email!');
+                notify.success('OTP sent to your email!');
             }
         } catch (err) {
-            toast.error('Failed to send OTP.');
+            notify.error('Failed to send OTP.');
         } finally {
             setOtpLoading(false);
         }
@@ -75,7 +76,7 @@ const NewComplaint = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!otpSent) {
-            toast.error('Please click "Send OTP" first.');
+            notify.error('Please click "Send OTP" first.');
             return;
         }
         setLoading(true);
@@ -89,11 +90,11 @@ const NewComplaint = () => {
         try {
             const response = await complaintService.submitNewComplaint(submitData);
             if (response.success) {
-                toast.success('Complaint registered successfully!');
+                notify.success('Complaint registered successfully!');
                 navigate('/dashboard');
             }
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to register complaint.');
+            notify.error(err.response?.data?.message || 'Failed to register complaint.');
         } finally {
             setLoading(false);
         }
