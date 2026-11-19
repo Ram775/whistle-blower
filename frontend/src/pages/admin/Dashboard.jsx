@@ -45,7 +45,7 @@ const Dashboard = () => {
         if (statsRes.status) setStatsData(statsRes.data);
 
         if (complaintsRes.status) {
-          setRecentComplaints(complaintsRes.data.slice(0, 5));
+          setRecentComplaints(complaintsRes.data.reverse().slice(0, 5));
         }
       } catch (error) {
         toast.error("Failed to load dashboard");

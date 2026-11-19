@@ -47,7 +47,7 @@ export default function ComplaintList() {
 
   const filteredData = useMemo(() => {
     const term = debouncedSearch?.toLowerCase().trim();
-    let result = apiData || [];
+    let result = apiData.reverse() || [];
     if (term) {
       result = result.filter((item) =>
         `${item.complaint_no} ${item.full_name} ${item.event} ${item.complaint_date} ${item.complaint_status}`
