@@ -15,7 +15,7 @@ import {
     submitNewComplaintValidator
 } from '../validators/complaintValidator.js';
 import { auth, allowRoles } from '../middlewares/authMiddleware.js';
-import { upload } from '../middlewares/uploadMiddleware.js';
+import { upload, verifyUploadedFiles  } from '../middlewares/uploadMiddleware.js';
 import { 
     otpSendLimiter, 
     otpVerifyLimiter, 
@@ -41,6 +41,7 @@ router.post(
         { name: 'id_photo', maxCount: 1 },
         { name: 'complaint_document', maxCount: 1 }
     ]),
+    verifyUploadedFiles, 
     submitComplaintValidator,
     submitComplaint
 );
@@ -52,6 +53,7 @@ router.post(
     allowRoles(3),
     complaintSubmitLimiter,   // ✅ Rate limit
     upload.fields([{ name: 'complaint_document', maxCount: 1 }]),
+    verifyUploadedFiles,
     submitNewComplaintValidator,
     submitNewComplaint
 );

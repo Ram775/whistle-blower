@@ -6,7 +6,7 @@ import {
   sliderValidator,
 } from "../validators/settingValidator.js";
 import { auth, allowRoles } from "../middlewares/authMiddleware.js";
-import { upload } from "../middlewares/uploadMiddleware.js";
+import { upload, verifyUploadedFiles } from "../middlewares/uploadMiddleware.js";
 import { Slider, Setting } from "../models/index.js";
 import {
   settingsReadLimiter,   // ✅ Add
@@ -54,10 +54,10 @@ router.post("/settings", settingsWriteLimiter, settingValidator, SettingControll
 
 // Sliders
 router.get("/sliders", settingsReadLimiter, SliderController.index);
-router.post("/sliders", settingsWriteLimiter, sliderValidator, SliderController.store);
-router.put("/sliders/:id", settingsWriteLimiter, sliderValidator, SliderController.update);
+router.post("/sliders", settingsWriteLimiter, sliderValidator, verifyUploadedFiles, SliderController.store);
+router.put("/sliders/:id", settingsWriteLimiter, sliderValidator, verifyUploadedFiles, SliderController.update);
 router.post("/sliders/multiple_delete", settingsWriteLimiter, SliderController.multipleDelete);
 router.post("/sliders/change_status", settingsWriteLimiter, SliderController.changeStatus);
-router.post("/sliders/delete_image", settingsWriteLimiter, SliderController.delete_image);
+router.post("/sliders/delete_image", settingsWriteLimiter, verifyUploadedFiles, SliderController.delete_image);
 
 export default router;

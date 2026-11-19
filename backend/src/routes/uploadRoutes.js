@@ -1,6 +1,6 @@
 import express from 'express';
 import * as UploadController from '../controllers/UploadFileController.js';
-import { upload } from '../middlewares/uploadMiddleware.js';
+import { upload, verifyUploadedFiles  } from '../middlewares/uploadMiddleware.js';
 import { auth, allowRoles } from '../middlewares/authMiddleware.js';
 import { uploadLimiter } from '../middlewares/rateLimiter.js'; // ✅ Add
 
@@ -13,6 +13,7 @@ router.post(
     allowRoles(1, 2), 
     uploadLimiter,   // ✅ Rate limit
     upload.single('file'), 
+    verifyUploadedFiles, 
     UploadController.single_image
 );
 
