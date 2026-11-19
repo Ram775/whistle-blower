@@ -36,7 +36,7 @@ api.interceptors.response.use(
             if (window.location.pathname.startsWith('/admin')) {
                 window.location.href = '/admin/login';
             } else {
-                window.location.href = '/customer/login';
+                window.location.href = '/login';
             }
         }
         return Promise.reject(error);

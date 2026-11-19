@@ -55,8 +55,8 @@ const App = () => {
         />
 
         <Route path="/admin/login" element={<Login />} />
-        <Route path="/customer/login" element={<UserLogin />} />
-        <Route path="/customer/register" element={<Registration />} />
+        <Route path="/login" element={<UserLogin />} />
+        <Route path="/register" element={<Registration />} />
 
         <Route
           path="/unauthorized"
@@ -85,10 +85,10 @@ const App = () => {
         {/* ================= CUSTOMER PROTECTED ROUTES ================= */}
         <Route element={<ProtectedRoute allowedRoles={[3]} />}>
           <Route element={<UserLayout />}>
-            <Route path="/customer/dashboard" element={<CustomerDashboard />} />
-            <Route path="/customer/new-complaint" element={<NewComplaint />} />
+            <Route path="/dashboard" element={<CustomerDashboard />} />
+            <Route path="/new-complaint" element={<NewComplaint />} />
             <Route
-              path="/customer/complaint/:id"
+              path="/complaint/:id"
               element={<CustomerComplaintView />}
             />
           </Route>

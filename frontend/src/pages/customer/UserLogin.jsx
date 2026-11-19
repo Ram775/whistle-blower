@@ -183,7 +183,7 @@ const UserLogin = () => {
                     <div className="mt-8 pt-6 border-t border-slate-100 space-y-2.5 text-center text-sm">
                         <p className="text-slate-600">
                             New complaint?{' '}
-                            <Link to="/customer/register" className="text-blue-600 font-semibold hover:text-blue-700 hover:underline transition-colors">
+                            <Link to="/register" className="text-blue-600 font-semibold hover:text-blue-700 hover:underline transition-colors">
                                 Register here
                             </Link>
                         </p>

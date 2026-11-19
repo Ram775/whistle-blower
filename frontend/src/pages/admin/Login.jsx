@@ -204,7 +204,7 @@ const Login = () => {
           <div className="mt-8 pt-6 border-t border-slate-100 text-center text-xs text-slate-500">
             Not an administrator?{" "}
             <Link
-              to="/customer/login"
+              to="/login"
               className="text-slate-700 font-semibold hover:text-blue-600 underline underline-offset-2 transition-colors"
             >
               Whistleblower Login

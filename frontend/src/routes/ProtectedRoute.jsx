@@ -6,7 +6,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
     const location = useLocation();
 
     if (!user) {
-        const redirectPath = location.pathname.startsWith('/admin') ? '/admin/login' : '/customer/login';
+        const redirectPath = location.pathname.startsWith('/admin') ? '/admin/login' : '/login';
         return <Navigate to={redirectPath} replace />;
     }
 

@@ -7,7 +7,7 @@ const CustomerHeader = () => {
    const handleLogout = () => {
       logout();
       toast.success("Logged out successfully");
-      navigate("/customer/login");
+      navigate("/login");
     };
   return (
     <div>
