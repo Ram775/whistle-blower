@@ -73,17 +73,24 @@ const User = sequelize.define(
         createdAt: 'created_at',
         updatedAt: 'updated_at',
         underscored: true,
-        hooks: {
-            beforeSave: (user) => {
-                // Sync Blind Index automatically
-                if (user.changed('id_number')) {
-                    const plainId = user.getDataValue('id_number');
-                    if (plainId) {
-                        user.id_number_hash = User.hashIdNumber(plainId);
-                    }
-                }
-            },
-        },
+       
+hooks: {
+    beforeSave: (user) => {
+        if (user.changed('id_number')) {
+            // Get decrypted PAN using custom getter
+            const plainId = user.id_number;
+
+            if (plainId) {
+                user.id_number_hash = User.hashIdNumber(
+                    plainId.trim()
+                );
+            } else {
+                user.id_number_hash = null;
+            }
+        }
+    }
+}
+
     }
 );
 

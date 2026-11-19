@@ -63,13 +63,13 @@ const LandingPage = () => {
           </div>
           <div className="space-x-4">
             <Link
-              to="/customer/login"
+              to="/login"
               className="text-gray-600 font-medium hover:text-blue-600 transition"
             >
               Login
             </Link>
             <Link
-              to="/customer/register"
+              to="/register"
               className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm"
             >
               Register
@@ -123,13 +123,13 @@ const LandingPage = () => {
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <Link
-            to="/customer/register"
+            to="/register"
             className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition flex items-center justify-center font-semibold shadow-md"
           >
             Register Complaint <ArrowRight className="w-5 h-5 ml-2" />
           </Link>
           <Link
-            to="/customer/login"
+            to="/login"
             className="bg-white text-blue-600 border border-blue-600 px-8 py-3 rounded-lg hover:bg-blue-50 transition font-semibold shadow-sm"
           >
             Track Complaint

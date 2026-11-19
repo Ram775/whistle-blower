@@ -2,36 +2,74 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import fs from 'fs';
 import dotenv from 'dotenv';
+import morgan from 'morgan';
 import routes from './routes/index.js';
 import { multerErrorHandler } from './middlewares/uploadMiddleware.js';
-import morgan from 'morgan';
-
+import logger from './utils/logger.js';
 
 dotenv.config();
 
 const app = express();
 
-// CORS (allow frontend Vite)
-app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true
-}));
+// ✅ Trust Proxy (Production me Nginx/Cloudflare/Load Balancer ke liye MUST)
+// Iske bina rate limiting sahi se IP detect nahi kar payegi
+app.set('trust proxy', 1);
 
+// ✅ Ensure logs folder exists
+const logDir = path.join(process.cwd(), 'logs');
+if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+}
 
-app.use(morgan('dev')); // Logging middleware
+// ✅ Ensure uploads folder exists
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// ================= MIDDLEWARES =================
+
+// CORS
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map((url) => url.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g., curl, Postman, server-to-server)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
+  })
+);
 
 // Body Parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-
+// Morgan Logging (Console + File)
+const accessLogStream = fs.createWriteStream(
+    path.join(logDir, 'access.log'),
+    { flags: 'a' }
+);
+app.use(morgan('dev')); // Console me dikhega
+app.use(morgan('combined', { stream: accessLogStream })); // File me save hoga
 
 // Static folder for uploads
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+app.use('/uploads', express.static(uploadsDir));
 
-// API Routes
+// ================= ROUTES =================
 app.use('/api', routes);
 
 // 404 Handler
@@ -39,13 +77,19 @@ app.use((req, res) => {
     res.status(404).json({ status: false, message: 'Route Not Found' });
 });
 
-// Global Error Handler
+// ================= ERROR HANDLERS =================
+// ✅ Ye sabse last me hona chahiye
+
+// Multer specific errors
 app.use(multerErrorHandler);
+
+// Global errors
 app.use((err, req, res, next) => {
-    console.error('Global Error:', err);
-    res.status(500).json({ 
-        status: false, 
-        message: err.message || 'Internal Server Error' 
+    logger.error(`${err.message} | ${req.method} ${req.url} | IP: ${req.ip}`);
+    
+    res.status(500).json({
+        status: false,
+        message: err.message || 'Internal Server Error'
     });
 });
 
