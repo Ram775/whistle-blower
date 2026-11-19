@@ -30,7 +30,7 @@ const UserLogin = () => {
             if (response.status) {
                 login(response.user, response.token);
                 toast.success(`Welcome back, ${response.user.first_name || 'User'}!`);
-                navigate('/customer/dashboard');
+                navigate('/dashboard');
             } else {
                 toast.error(response.message || 'Login failed.');
             }
@@ -61,15 +61,7 @@ const UserLogin = () => {
                 <div className="p-8 sm:p-10">
                     {/* Header Section */}
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 mb-4 ring-1 ring-blue-100">
-                            <ShieldCheck className="w-8 h-8" />
-                        </div>
-                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-                            Whistleblower Portal
-                        </h2>
-                        <p className="text-sm text-slate-500 mt-1.5">
-                            Securely access and track your registered complaints
-                        </p>
+                        
                     </div>
 
                     {/* ⚠️ Warning: Attempts Left */}
@@ -158,7 +150,7 @@ const UserLogin = () => {
                         <button 
                             type="submit" 
                             disabled={loading || isBlocked}
-                            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md shadow-blue-600/20 transition-all duration-200 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed mt-2 cursor-pointer"
+                            className="w-full btn_base btn_primary flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md shadow-blue-600/20 transition-all duration-200 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed mt-2 cursor-pointer"
                         >
                             {loading ? (
                                 <>
@@ -172,7 +164,7 @@ const UserLogin = () => {
                                 </>
                             ) : (
                                 <>
-                                    <span>Access Portal</span>
+                                    <span >Login</span>
                                     <ArrowRight className="w-4 h-4" />
                                 </>
                             )}
@@ -180,19 +172,14 @@ const UserLogin = () => {
                     </form>
 
                     {/* Footer Links */}
-                    <div className="mt-8 pt-6 border-t border-slate-100 space-y-2.5 text-center text-sm">
+                    <div className=" pt-6 border-t border-slate-100 space-y-2.5 text-center text-sm">
                         <p className="text-slate-600">
                             New complaint?{' '}
                             <Link to="/register" className="text-blue-600 font-semibold hover:text-blue-700 hover:underline transition-colors">
                                 Register here
                             </Link>
                         </p>
-                        <p className="text-slate-500 text-xs">
-                            Are you an administrator?{' '}
-                            <Link to="/admin/login" className="text-slate-700 font-medium hover:text-blue-600 underline underline-offset-2 transition-colors">
-                                Admin Login
-                            </Link>
-                        </p>
+                       
                     </div>
                 </div>
             </div>

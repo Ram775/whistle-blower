@@ -90,7 +90,7 @@ const NewComplaint = () => {
             const response = await complaintService.submitNewComplaint(submitData);
             if (response.success) {
                 toast.success('Complaint registered successfully!');
-                navigate('/customer/dashboard');
+                navigate('/dashboard');
             }
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to register complaint.');
@@ -108,7 +108,7 @@ const NewComplaint = () => {
                 {/* Back Navigation */}
                 <button
                     type="button"
-                    onClick={() => navigate('/customer/dashboard')}
+                    onClick={() => navigate('/dashboard')}
                     className="inline-flex items-center gap-1.5 text-sm font-bold text-[#1b2a5e] hover:underline cursor-pointer"
                 >
                     <ArrowLeft className="w-4 h-4" />
@@ -328,7 +328,7 @@ const NewComplaint = () => {
                         <div className="pt-2 flex flex-col sm:flex-row items-center justify-end gap-3 border-t border-gray-100">
                             <button
                                 type="button"
-                                onClick={() => navigate('/customer/dashboard')}
+                                onClick={() => navigate('/dashboard')}
                                 className="w-full sm:w-auto px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
                             >
                                 Cancel

@@ -62,7 +62,7 @@ const CustomerComplaintView = () => {
                     <p className="text-red-600 font-bold text-base mb-2">Complaint not found!</p>
                     <p className="text-xs text-gray-500 mb-6">The requested record may not exist or you do not have permission to view it.</p>
                     <button 
-                        onClick={() => navigate('/customer/dashboard')}
+                        onClick={() => navigate('/dashboard')}
                         className="inline-flex items-center justify-center gap-2 bg-[#1b2a5e] text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-[#2c428c] transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" /> Back to Dashboard
@@ -94,7 +94,7 @@ const CustomerComplaintView = () => {
                 {/* Top Action Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <button 
-                        onClick={() => navigate('/customer/dashboard')} 
+                        onClick={() => navigate('/dashboard')} 
                         className="inline-flex items-center gap-1.5 text-sm font-bold text-[#1b2a5e] hover:underline cursor-pointer"
                     >
                         <ArrowLeft className="w-4 h-4" />

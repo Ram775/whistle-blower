@@ -311,7 +311,7 @@ const CustomerDashboard = () => {
             </p>
           </div>
           <Link
-            to="/customer/new-complaint"
+            to="/new-complaint"
             className="bg-white text-[#1b2a5e] px-4 py-2 rounded-lg font-bold text-sm flex items-center hover:bg-[#d2dfff] transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4 mr-1.5" /> New Complaint
@@ -412,7 +412,7 @@ const CustomerDashboard = () => {
                               </span>
                               <span className="flex justify-center">
                                 <Link
-                                  to={`/customer/complaint/${item.id}`}
+                                  to={`/complaint/${item.id}`}
                                   className="text-[#1b2a5e] hover:underline flex items-center gap-1 font-bold text-[11px] uppercase"
                                 >
                                   <Eye size={14} /> View
@@ -467,7 +467,7 @@ const CustomerDashboard = () => {
                             />
                           </span>
                           <Link
-                            to={`/customer/complaint/${item.id}`}
+                            to={`/complaint/${item.id}`}
                             className="text-[#1b2a5e] hover:underline flex items-center gap-1 font-bold text-[11px] uppercase"
                           >
                             <Eye size={14} /> View
