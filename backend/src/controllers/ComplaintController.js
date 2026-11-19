@@ -52,16 +52,65 @@ export const sendOtp = async (req, res) => {
     }
 };
 
+// export const verifyOtp = async (req, res) => {
+//     try {
+//         const { otp, otp_token } = req.body;
+//         if (!otp_token) return res.status(400).json({ success: false, message: 'OTP session invalid' });
+
+//         const decoded = jwt.verify(otp_token, process.env.JWT_SECRET);
+//         if (decoded.otp !== otp) {
+//             return res.status(400).json({ success: false, message: 'Invalid OTP' });
+//         }
+
+//         const verifiedToken = jwt.sign(
+//             { email_verified: decoded.email },
+//             process.env.JWT_SECRET,
+//             { expiresIn: '15m' }
+//         );
+
+//         return res.status(200).json({
+//             success: true,
+//             message: 'OTP verified successfully',
+//             verified_token: verifiedToken
+//         });
+//     } catch (error) {
+//         return res.status(400).json({ success: false, message: 'OTP expired or invalid' });
+//     }
+// };
+
+
+
 export const verifyOtp = async (req, res) => {
     try {
         const { otp, otp_token } = req.body;
-        if (!otp_token) return res.status(400).json({ success: false, message: 'OTP session invalid' });
+        if (!otp_token) return res.status(400).json({ success: false, message: 'OTP session expired. Please request a new OTP.' });
 
-        const decoded = jwt.verify(otp_token, process.env.JWT_SECRET);
-        if (decoded.otp !== otp) {
-            return res.status(400).json({ success: false, message: 'Invalid OTP' });
+        // 1. OTP Verify
+        let decoded;
+        try {
+            decoded = jwt.verify(otp_token, process.env.JWT_SECRET);
+        } catch (err) {
+            return res.status(400).json({ success: false, message: 'OTP expired. Please request a new OTP.' });
         }
 
+        if (decoded.otp !== otp) {
+            return res.status(400).json({ success: false, message: 'Invalid OTP. Please enter the correct code.' });
+        }
+
+        // ✅ 2. CHECK: Email already registered?
+        const existingUser = await User.findOne({ 
+            where: { email_id: decoded.email.toLowerCase() } 
+        });
+
+        if (existingUser) {
+            return res.status(409).json({ 
+                success: false, 
+                email_registered: true,
+                message: 'This email is already registered. Please login to your account to submit a new complaint.' 
+            });
+        }
+
+        // 3. OTP Verified Successfully
         const verifiedToken = jwt.sign(
             { email_verified: decoded.email },
             process.env.JWT_SECRET,
@@ -70,13 +119,18 @@ export const verifyOtp = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: 'OTP verified successfully',
+            message: 'Email verified successfully. Please fill the complaint form.',
             verified_token: verifiedToken
         });
     } catch (error) {
-        return res.status(400).json({ success: false, message: 'OTP expired or invalid' });
+        console.error('Verify OTP Error:', error);
+        return res.status(400).json({ success: false, message: 'OTP verification failed. Please try again.' });
     }
 };
+
+
+
+
 
 export const submitComplaint = async (req, res) => {
     try {

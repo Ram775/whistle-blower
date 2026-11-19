@@ -165,7 +165,23 @@ const Registration = () => {
         toast.success("Email verified successfully!");
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Invalid OTP");
+      const data = err.response?.data;
+
+      // ✅ Naya Logic: Agar email already registered hai
+      if (data?.email_registered) {
+        // 1. Custom message toast (info style)
+        toast.error(data.message, {
+          duration: 5000,
+          icon: "ℹ️",
+        });
+
+        // 2. User ko 2 second baad /login pe redirect kar do
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+      } else {
+        toast.error(data?.message || "Invalid OTP. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -208,7 +224,7 @@ const Registration = () => {
 
     const submitData = new FormData();
     Object.keys(formData).forEach((key) =>
-      submitData.append(key, formData[key])
+      submitData.append(key, formData[key]),
     );
     submitData.append("email_id", email);
     submitData.append("verified_token", verifiedToken);
@@ -219,13 +235,13 @@ const Registration = () => {
       const response = await complaintService.submitComplaint(submitData);
       if (response.success) {
         toast.success(
-          `Complaint registered! Your Complaint No: ${response.complaint_no}`
+          `Complaint registered! Your Complaint No: ${response.complaint_no}`,
         );
         navigate("/login");
       }
     } catch (err) {
       toast.error(
-        err.response?.data?.message || "Failed to register complaint."
+        err.response?.data?.message || "Failed to register complaint.",
       );
     } finally {
       setLoading(false);
@@ -259,13 +275,15 @@ const Registration = () => {
                   Whistleblower Registration
                 </h2>
                 <p className="text-xs text-[#d2dfff] mt-1">
-                  Your identity and disclosure details are strictly protected & encrypted
+                  Your identity and disclosure details are strictly protected &
+                  encrypted
                 </p>
               </div>
             </div>
 
             <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider bg-white/10 text-[#d2dfff] px-3.5 py-1.5 rounded-full self-start sm:self-center">
-              <Lock className="w-3.5 h-3.5 text-emerald-400" /> Confidential Portal
+              <Lock className="w-3.5 h-3.5 text-emerald-400" /> Confidential
+              Portal
             </span>
           </div>
 
@@ -281,8 +299,8 @@ const Registration = () => {
                     isActive
                       ? "bg-white/15 ring-1 ring-white/30"
                       : isCompleted
-                      ? "bg-emerald-500/15"
-                      : "opacity-55"
+                        ? "bg-emerald-500/15"
+                        : "opacity-55"
                   }`}
                 >
                   <div
@@ -290,8 +308,8 @@ const Registration = () => {
                       isCompleted
                         ? "bg-emerald-500 text-white"
                         : isActive
-                        ? "bg-white text-[#1b2a5e]"
-                        : "bg-white/20 text-white"
+                          ? "bg-white text-[#1b2a5e]"
+                          : "bg-white/20 text-white"
                     }`}
                   >
                     {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : s.id}
@@ -331,7 +349,8 @@ const Registration = () => {
                   Verify Your Email Address
                 </h3>
                 <p className="text-xs text-gray-500">
-                  We will send a 6-digit One-Time Password (OTP) to authenticate your session.
+                  We will send a 6-digit One-Time Password (OTP) to authenticate
+                  your session.
                 </p>
               </div>
 
@@ -376,7 +395,8 @@ const Registration = () => {
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label className={labelClass}>
-                        Enter 6-Digit OTP <span className="text-red-500">*</span>
+                        Enter 6-Digit OTP{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <span className="text-xs font-semibold text-emerald-600">
                         OTP Sent!
@@ -425,7 +445,8 @@ const Registration = () => {
                   <span>Contact & Residential Address</span>
                 </h3>
                 <span className="text-xs text-gray-500">
-                  <span className="text-red-500 font-bold">*</span> Mandatory fields
+                  <span className="text-red-500 font-bold">*</span> Mandatory
+                  fields
                 </span>
               </div>
 
