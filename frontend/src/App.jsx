@@ -27,24 +27,11 @@ import ResetPassword from "./pages/admin/ResetPassword";
 import LandingPage from "./pages/customer/LandingPage";
 import ChangePassword from "./pages/auth/ChangePassword";
 import UserLayout from "./layouts/UserLayout";
+import Unauthorized from "./pages/Unauthorized";
 
 const App = () => {
   return (
     <AuthProvider>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: "#363636",
-            color: "#fff",
-            borderRadius: "8px",
-          },
-          success: { theme: { primary: "#10B981" } },
-          error: { theme: { primary: "#EF4444" } },
-        }}
-      />
-
       <Routes>
         {/* ================= PUBLIC ROUTES ================= */}
         <Route path="/" element={<LandingPage />} />
@@ -58,14 +45,7 @@ const App = () => {
         <Route path="/login" element={<UserLogin />} />
         <Route path="/register" element={<Registration />} />
 
-        <Route
-          path="/unauthorized"
-          element={
-            <div className="p-8 text-center text-red-600 text-2xl font-bold mt-20">
-              Unauthorized Access!
-            </div>
-          }
-        />
+        <Route path="/unauthorized" element={<Unauthorized />} />
 
         {/* ================= ADMIN PROTECTED ROUTES ================= */}
         <Route element={<ProtectedRoute allowedRoles={[1, 2]} />}>
@@ -87,10 +67,7 @@ const App = () => {
           <Route element={<UserLayout />}>
             <Route path="/dashboard" element={<CustomerDashboard />} />
             <Route path="/new-complaint" element={<NewComplaint />} />
-            <Route
-              path="/complaint/:id"
-              element={<CustomerComplaintView />}
-            />
+            <Route path="/complaint/:id" element={<CustomerComplaintView />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFound />} />
