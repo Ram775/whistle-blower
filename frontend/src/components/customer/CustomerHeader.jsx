@@ -1,8 +1,17 @@
 import React from "react";
 import { useAuth } from "../../context/AuthContext";
 import { LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+
 
 const CustomerHeader = () => {
+
+
+
+  const navigate = useNavigate();
+
+
   const { user, logout } = useAuth();
    const handleLogout = () => {
       logout();
@@ -14,13 +23,16 @@ const CustomerHeader = () => {
       {/* Top Navbar */}
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="w-full mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2.5">
-            <img
-              src="/images/logo.png"
-              alt="Logo"
-              className="h-16 w-auto object-contain"
-            />
-          </div>
+         <div
+  className="flex items-center space-x-2.5 cursor-pointer"
+  onClick={() => navigate("/dashboard")}
+>
+  <img
+    src="/images/logo.png"
+    alt="Logo"
+    className="h-16 w-auto object-contain"
+  />
+</div>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600">
               Welcome,{" "}

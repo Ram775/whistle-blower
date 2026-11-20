@@ -16,6 +16,7 @@ import ListRow from "../../components/ui/ListRow";
 import ListPagination from "../../components/ui/ListPagination";
 import TableFilters from "../../components/ui/TableFilters";
 import TextHighlighter from "../../components/ui/TextHighlighter";
+import { Tooltip } from "antd";
 
 const CustomerDashboard = () => {
   const { user, logout } = useAuth();
@@ -385,12 +386,17 @@ const CustomerDashboard = () => {
                                   search={search}
                                 />
                               </span>
-                              <span className="text-left pl-2 truncate text-gray-700 text-[13px]">
-                                <TextHighlighter
-                                  text={item?.event}
-                                  search={search}
-                                />
-                              </span>
+                              <Tooltip
+                                title={item?.event || ""}
+                                placement="top"
+                              >
+                                <span className="text-left pl-2 truncate text-gray-700 text-[13px] cursor-pointer">
+                                  <TextHighlighter
+                                    text={item?.event}
+                                    search={search}
+                                  />
+                                </span>
+                              </Tooltip>
                               <span className="text-left pl-2 text-gray-700 text-[13px]">
                                 <TextHighlighter
                                   text={item?.complaint_date}
