@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FileText, Plus, LogOut, Eye, Loader2 } from "lucide-react";
+import { FileText, Plus, LogOut, Eye, Loader2, Pencil } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { complaintService } from "../../services/complaintService";
 import { notify } from "../../utils/notify";
@@ -16,7 +16,6 @@ import ListRow from "../../components/ui/ListRow";
 import ListPagination from "../../components/ui/ListPagination";
 import TableFilters from "../../components/ui/TableFilters";
 import TextHighlighter from "../../components/ui/TextHighlighter";
-
 
 const CustomerDashboard = () => {
   const { user, logout } = useAuth();
@@ -52,8 +51,6 @@ const CustomerDashboard = () => {
   useEffect(() => {
     fetchComplaints();
   }, []);
-
- 
 
   const filteredData = useMemo(() => {
     const term = debouncedSearch?.toLowerCase().trim();
@@ -300,11 +297,9 @@ const CustomerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      
-
       <main className="w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Welcome Banner */}
-        <div className="bg-gradient-to-r from-[#1b2a5e] to-[#2c428c] rounded-lg p-6 text-white shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="bg-gradient-to-r from-[#1b2a5e] to-[#2c428c] rounded p-6 text-white shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h2 className="text-2xl font-bold">Hello, {user?.first_name}!</h2>
             <p className="text-[#d2dfff] text-sm mt-1">
@@ -411,12 +406,20 @@ const CustomerDashboard = () => {
                                   {item.complaint_status}
                                 </span>
                               </span>
-                              <span className="flex justify-center">
+                              <span className="flex justify-center items-center gap-3">
                                 <Link
                                   to={`/complaint/${item.id}`}
                                   className="text-[#1b2a5e] hover:underline flex items-center gap-1 font-bold text-[11px] uppercase"
+                                  title="View Complaint"
                                 >
                                   <Eye size={14} /> View
+                                </Link>
+                                <Link
+                                  to={`/complaint/${item.id}/edit`}
+                                  className="text-orange-600 hover:text-orange-800 hover:underline flex items-center gap-1 font-bold text-[11px] uppercase"
+                                  title="Edit Complaint"
+                                >
+                                  <Pencil size={14} /> Edit
                                 </Link>
                               </span>
                             </ListRow>
@@ -467,12 +470,20 @@ const CustomerDashboard = () => {
                               search={search}
                             />
                           </span>
-                          <Link
-                            to={`/complaint/${item.id}`}
-                            className="text-[#1b2a5e] hover:underline flex items-center gap-1 font-bold text-[11px] uppercase"
-                          >
-                            <Eye size={14} /> View
-                          </Link>
+                          <div className="flex items-center gap-3">
+                            <Link
+                              to={`/complaint/${item.id}`}
+                              className="text-[#1b2a5e] hover:underline flex items-center gap-1 font-bold text-[11px] uppercase"
+                            >
+                              <Eye size={14} /> View
+                            </Link>
+                            <Link
+                              to={`/complaint/${item.id}/edit`}
+                              className="text-orange-600 hover:text-orange-800 hover:underline flex items-center gap-1 font-bold text-[11px] uppercase"
+                            >
+                              <Pencil size={14} /> Edit
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     ))

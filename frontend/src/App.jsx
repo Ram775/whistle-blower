@@ -28,6 +28,7 @@ import LandingPage from "./pages/customer/LandingPage";
 import ChangePassword from "./pages/auth/ChangePassword";
 import UserLayout from "./layouts/UserLayout";
 import Unauthorized from "./pages/Unauthorized";
+import EditComplaint from "./pages/customer/EditComplaint";
 
 const App = () => {
   return (
@@ -68,6 +69,7 @@ const App = () => {
             <Route path="/dashboard" element={<CustomerDashboard />} />
             <Route path="/new-complaint" element={<NewComplaint />} />
             <Route path="/complaint/:id" element={<CustomerComplaintView />} />
+            <Route path="/complaint/:id/edit" element={<EditComplaint />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFound />} />

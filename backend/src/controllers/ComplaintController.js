@@ -129,9 +129,6 @@ export const verifyOtp = async (req, res) => {
 };
 
 
-
-
-
 export const submitComplaint = async (req, res) => {
     try {
         const { verified_token, email_id, id_number, ...otherData } = req.body;
@@ -483,9 +480,6 @@ export const getMyComplaints = async (req, res) => {
 };
 
 
-
-
-
 export const generateComplaintPdf = async (req, res) => {
     try {
         const complaint = await Complaint.findByPk(req.params.id, {
@@ -584,5 +578,83 @@ export const generateComplaintPdf = async (req, res) => {
     } catch (error) {
         console.error('PDF Generation Error:', error);
         return res.status(500).json({ status: false, message: 'Failed to generate PDF' });
+    }
+};
+
+
+// ================= EDIT COMPLAINT =================
+export const editComplaint = async (req, res) => {
+    try {
+        const complaint = await Complaint.findByPk(req.params.id);
+        
+        if (!complaint) {
+            return res.status(404).json({ status: false, message: 'Complaint not found.' });
+        }
+
+        // ✅ Authorization: Sirf owner edit kar sakta hai
+        if (Number(complaint.user_id) !== Number(req.user.id)) {
+            return res.status(403).json({ status: false, message: 'Unauthorized: You can only edit your own complaints.' });
+        }
+
+        return res.status(200).json({ status: true, data: complaint });
+    } catch (error) {
+        console.error('Edit Complaint Error:', error);
+        return res.status(500).json({ status: false, message: 'Failed to load complaint.' });
+    }
+};
+
+// ================= UPDATE COMPLAINT =================
+export const updateComplaint = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const complaint = await Complaint.findByPk(id);
+
+        if (!complaint) {
+            return res.status(404).json({ status: false, message: 'Complaint not found.' });
+        }
+
+        // ✅ Authorization: Sirf owner update kar sakta hai
+        if (Number(complaint.user_id) !== Number(req.user.id)) {
+            return res.status(403).json({ status: false, message: 'Unauthorized: You can only update your own complaints.' });
+        }
+
+        // ✅ Whitelist: Sirf ye fields update honge (mass assignment se bachne ke liye)
+        const updateData = {
+            determinationof_vigilance_angle_id: req.body.determinationof_vigilance_angle_id || complaint.determinationof_vigilance_angle_id,
+            disclosure_against: req.body.disclosure_against || complaint.disclosure_against,
+            complaint_description: req.body.complaint_description || complaint.complaint_description,
+            remarks: req.body.remarks || complaint.remarks,
+        };
+
+        // File upload (agar naya document aaya hai)
+        if (req.file || (req.files && req.files['complaint_document'])) {
+            const newDoc = req.file ? req.file.filename : req.files['complaint_document'][0].filename;
+            
+            // Purani file delete karo
+            if (complaint.complaint_document) {
+                const oldPath = path.join(process.cwd(), 'uploads', 'complaintdocument', complaint.complaint_document);
+                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+            }
+            updateData.complaint_document = newDoc;
+        }
+
+        await complaint.update(updateData);
+
+        // Status History me entry
+        await ComplaintStatusHistory.create({
+            complaint_id: complaint.id,
+            user_id: req.user.id,
+            complaint_status: complaint.complaint_status,
+            comment: 'Complaint details updated by whistleblower'
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: 'Complaint updated successfully.',
+        });
+
+    } catch (error) {
+        console.error('Update Complaint Error:', error);
+        return res.status(500).json({ status: false, message: 'Failed to update complaint.' });
     }
 };
