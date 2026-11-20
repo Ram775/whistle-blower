@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { masterService } from "../../services/masterService";
 import { complaintService } from "../../services/complaintService";
-import { notify } from "../../utils/notify"; // 👈 Custom notify import
+import { notify } from "../../utils/notify"; 
 
 const Registration = () => {
   const navigate = useNavigate();

@@ -302,7 +302,7 @@ const CustomerDashboard = () => {
         {/* Welcome Banner */}
         <div className="bg-gradient-to-r from-[#1b2a5e] to-[#2c428c] rounded p-6 text-white shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold">Hello, {user?.first_name}!</h2>
+            <h2 className="text-2xl font-bold">Hello, {user?.first_name + " " + user?.last_name}</h2>
             <p className="text-[#d2dfff] text-sm mt-1">
               Track your registered complaints and their real-time status here.
             </p>
@@ -416,17 +416,17 @@ const CustomerDashboard = () => {
                                 <Link
                                   to={`/complaint/${item.id}`}
                                   className="text-[#1b2a5e] hover:underline flex items-center gap-1 font-bold text-[11px] uppercase"
-                                  title="View Complaint"
                                 >
                                   <Eye size={14} /> View
                                 </Link>
-                                <Link
-                                  to={`/complaint/${item.id}/edit`}
-                                  className="text-orange-600 hover:text-orange-800 hover:underline flex items-center gap-1 font-bold text-[11px] uppercase"
-                                  title="Edit Complaint"
-                                >
-                                  <Pencil size={14} /> Edit
-                                </Link>
+                                {item.complaint_status === "Pending" && (
+                                  <Link
+                                    to={`/complaint/${item.id}/edit`}
+                                    className="text-orange-600 hover:text-orange-800 hover:underline flex items-center gap-1 font-bold text-[11px] uppercase"
+                                  >
+                                    <Pencil size={14} /> Edit
+                                  </Link>
+                                )}
                               </span>
                             </ListRow>
                           ))
@@ -483,12 +483,14 @@ const CustomerDashboard = () => {
                             >
                               <Eye size={14} /> View
                             </Link>
-                            <Link
-                              to={`/complaint/${item.id}/edit`}
-                              className="text-orange-600 hover:text-orange-800 hover:underline flex items-center gap-1 font-bold text-[11px] uppercase"
-                            >
-                              <Pencil size={14} /> Edit
-                            </Link>
+                            {item.complaint_status === "Pending" && (
+                              <Link
+                                to={`/complaint/${item.id}/edit`}
+                                className="text-orange-600 hover:text-orange-800 hover:underline flex items-center gap-1 font-bold text-[11px] uppercase"
+                              >
+                                <Pencil size={14} /> Edit
+                              </Link>
+                            )}
                           </div>
                         </div>
                       </div>

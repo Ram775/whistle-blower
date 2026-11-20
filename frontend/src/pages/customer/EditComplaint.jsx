@@ -13,6 +13,7 @@ import {
 import { complaintService } from "../../services/complaintService";
 import { masterService } from "../../services/masterService";
 import toast from "react-hot-toast";
+import { notify } from "../../utils/notify";
 
 const EditComplaint = () => {
   const { id } = useParams();
@@ -47,6 +48,16 @@ const EditComplaint = () => {
 
         if (complaintRes.status) {
           const c = complaintRes.data;
+
+          //  Check: Sirf pending complaints editable hain
+          if (Number(c.complaint_status) !== 1) {
+            notify.error(
+              "This complaint cannot be edited. Only pending complaints can be modified.",
+            );
+            navigate("/dashboard");
+            return;
+          }
+
           setFormData({
             determinationof_vigilance_angle_id:
               c.determinationof_vigilance_angle_id || "",
@@ -54,7 +65,7 @@ const EditComplaint = () => {
             complaint_description: c.complaint_description || "",
             remarks: c.remarks || "",
           });
-          // ✅ Purana document set karo
+          //  old document set
           if (c.complaint_document) {
             setExistingDoc(c.complaint_document);
           }

@@ -12,11 +12,10 @@ import ListTable from "../../components/ui/ListTable";
 import ListHeader from "../../components/ui/ListHeader";
 import ListRow from "../../components/ui/ListRow";
 import ListPagination from "../../components/ui/ListPagination";
-import TableFilters from "../../components/ui/TableFilters"; 
+import TableFilters from "../../components/ui/TableFilters";
 import { complaintService } from "../../services/complaintService";
 
 import TextHighlighter from "../../components/ui/TextHighlighter";
-
 
 export default function ComplaintList() {
   const [apiData, setApiData] = useState([]);
@@ -44,7 +43,9 @@ export default function ComplaintList() {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const filteredData = useMemo(() => {
     const term = debouncedSearch?.toLowerCase().trim();
@@ -53,18 +54,26 @@ export default function ComplaintList() {
       result = result.filter((item) =>
         `${item.complaint_no} ${item.full_name} ${item.event} ${item.complaint_date} ${item.complaint_status}`
           .toLowerCase()
-          .includes(term)
+          .includes(term),
       );
     }
-    if (selectedFilter) result = result.filter((item) => item.complaint_status === selectedFilter);
+    if (selectedFilter)
+      result = result.filter(
+        (item) => item.complaint_status === selectedFilter,
+      );
     return result.map((item, index) => ({ ...item, sr: index + 1 }));
   }, [apiData, selectedFilter, debouncedSearch]);
 
-  useEffect(() => { setCurrentPage(1); }, [debouncedSearch, perPage, selectedFilter]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, perPage, selectedFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / perPage));
   const startIndex = (currentPage - 1) * perPage;
-  const paginatedData = useMemo(() => filteredData.slice(startIndex, startIndex + perPage), [filteredData, startIndex, perPage]);
+  const paginatedData = useMemo(
+    () => filteredData.slice(startIndex, startIndex + perPage),
+    [filteredData, startIndex, perPage],
+  );
 
   const visiblePages = useMemo(() => {
     let start = Math.max(1, currentPage - 1);
@@ -113,7 +122,7 @@ export default function ComplaintList() {
       XLSX.utils.sheet_add_aoa(
         worksheet,
         [[`Report Generated On: ${generationDateTime}`]],
-        { origin: "A1" }
+        { origin: "A1" },
       );
       XLSX.utils.sheet_add_json(worksheet, exportData, { origin: "A3" });
 
@@ -178,7 +187,7 @@ export default function ComplaintList() {
         (item) =>
           (item.complaint_no && item.complaint_no.length > 30) ||
           (item.full_name && item.full_name.length > 25) ||
-          (item.event && item.event.length > 30)
+          (item.event && item.event.length > 30),
       );
 
       const dynamicOrientation = hasLongContent ? "landscape" : "portrait";
@@ -201,7 +210,8 @@ export default function ComplaintList() {
       doc.setFontSize(9);
       doc.textColor = [100, 100, 100];
 
-      const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
+      const pageWidth =
+        doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
       const rightMargin = pageWidth - 14;
 
       doc.text(`Generated On: ${generatedDate} | ${generatedTime}`, 14, 22);
@@ -261,7 +271,7 @@ export default function ComplaintList() {
           doc.text(
             `Page ${doc.internal.getNumberOfPages()}`,
             pageWidth - 25,
-            pageHeight - 5
+            pageHeight - 5,
           );
         },
       });
@@ -290,7 +300,6 @@ export default function ComplaintList() {
       </div>
 
       <div className="p-4 md:p-5 flex flex-col gap-4">
-        
         {/* ✅ USING TABLEFILTERS COMPONENT WITH EXPORT PROPS */}
         <div className="w-full">
           <TableFilters
@@ -302,7 +311,7 @@ export default function ComplaintList() {
             showRoleFilter={true}
             selectedRole={selectedFilter}
             setSelectedRole={setSelectedFilter}
-            roles={["Pending", "Under Processing", "Disposed"]} 
+            roles={["Pending", "Under Processing", "Disposed"]}
             placeholder="Search Complaint No, Name, Event..."
             showExportExcel={true}
             showExportPDF={true}
@@ -336,43 +345,71 @@ export default function ComplaintList() {
                     <div className="text-center">Action</div>
                   </ListHeader>
                 ),
-                rows: paginatedData.length > 0 ? (
-                  paginatedData.map((item) => (
-                    <ListRow
-                      key={item?.id}
-                      columns={gridTemplate}
-                      className="bg-white hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-none py-2"
-                    >
-                      <span className="text-center font-medium text-gray-700 text-[13px]">
-                        {item.sr}
-                      </span>
-                      <span className="text-left pl-2 font-semibold text-[#1b2a5e] truncate text-[13px]">
-                        <TextHighlighter text={item?.complaint_no} search={search} />
-                      </span>
-                      <span className="text-left pl-2 truncate text-gray-700 text-[13px]">
-                        <TextHighlighter text={item?.full_name} search={search} />
-                      </span>
-                      <span className="text-left pl-2 truncate text-gray-700 text-[13px]">
-                        <TextHighlighter text={item?.event} search={search} />
-                      </span>
-                      <span className="text-left pl-2 text-gray-700 text-[13px]">
-                        <TextHighlighter text={item?.complaint_date} search={search} />
-                      </span>
-                      <span className="flex justify-center">
-                        <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${getStatusColor(item.complaint_status)}`}>
-                          {item.complaint_status}
-                        </span>
-                      </span>
-                      <span className="flex justify-center">
-                        <Link to={`/admin/complaints/${item.id}`} className="text-[#1b2a5e] hover:underline flex items-center gap-1 font-bold text-[11px] uppercase">
-                          <Eye size={14} /> View
-                        </Link>
-                      </span>
-                    </ListRow>
-                  ))
-                ) : !loading && (
-                  <div className="py-10 text-center text-gray-400 italic w-full">No records found</div>
-                )
+                rows:
+                  paginatedData.length > 0
+                    ? paginatedData.map((item) => (
+                        <ListRow
+                          key={item?.id}
+                          columns={gridTemplate}
+                          className="bg-white hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-none py-2"
+                        >
+                          <span className="text-center font-medium text-gray-700 text-[13px]">
+                            {item.sr}
+                          </span>
+                          <span className="text-left pl-2 font-semibold text-[#1b2a5e] truncate text-[13px]">
+                            <TextHighlighter
+                              text={item?.complaint_no}
+                              search={search}
+                            />
+                          </span>
+
+                          <Tooltip
+                            title={item?.full_name || ""}
+                            placement="top"
+                          >
+                            <span className="text-left pl-2 truncate text-gray-700 text-[13px]">
+                              <TextHighlighter
+                                text={item?.full_name}
+                                search={search}
+                              />
+                            </span>
+                          </Tooltip>
+                          <Tooltip title={item?.event || ""} placement="top">
+                            <span className="text-left pl-2 truncate text-gray-700 text-[13px] cursor-pointer">
+                              <TextHighlighter
+                                text={item?.event}
+                                search={search}
+                              />
+                            </span>
+                          </Tooltip>
+                          <span className="text-left pl-2 text-gray-700 text-[13px]">
+                            <TextHighlighter
+                              text={item?.complaint_date}
+                              search={search}
+                            />
+                          </span>
+                          <span className="flex justify-center">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[11px] font-semibold ${getStatusColor(item.complaint_status)}`}
+                            >
+                              {item.complaint_status}
+                            </span>
+                          </span>
+                          <span className="flex justify-center">
+                            <Link
+                              to={`/admin/complaints/${item.id}`}
+                              className="text-[#1b2a5e] hover:underline flex items-center gap-1 font-bold text-[11px] uppercase"
+                            >
+                              <Eye size={14} /> View
+                            </Link>
+                          </span>
+                        </ListRow>
+                      ))
+                    : !loading && (
+                        <div className="py-10 text-center text-gray-400 italic w-full">
+                          No records found
+                        </div>
+                      ),
               }}
             </ListTable>
           </div>

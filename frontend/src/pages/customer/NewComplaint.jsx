@@ -16,8 +16,10 @@ import { complaintService } from "../../services/complaintService";
 import { masterService } from "../../services/masterService";
 import toast from "react-hot-toast";
 import { notify } from "../../utils/notify";
+import { useAuth } from "../../context/AuthContext";
 
 const NewComplaint = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
@@ -60,9 +62,15 @@ const NewComplaint = () => {
   const handleSendOtp = async () => {
     setOtpLoading(true);
     try {
-      const response = await complaintService.sendOtp(
-        JSON.parse(localStorage.getItem("user"))?.email_id,
-      );
+      const userEmail = user?.email_id;
+
+      if (!userEmail) {
+        notify.error("Email not found. Please login again.");
+        setLoading(false);
+        return;
+      }
+
+      const response = await complaintService.sendOtp(userEmail);
       if (response.success) {
         setOtpToken(response.otp_token);
         setOtpSent(true);
@@ -126,7 +134,6 @@ const NewComplaint = () => {
           {/* Card Header */}
           <div className="bg-gradient-to-r from-[#1b2a5e] to-[#2c428c] px-6 py-5 text-white flex items-center justify-between">
             <div className="flex items-center gap-3">
-              
               <div>
                 <h2 className="text-lg sm:text-xl font-bold tracking-tight">
                   Register New Complaint
@@ -136,7 +143,6 @@ const NewComplaint = () => {
                 </p>
               </div>
             </div>
-           
           </div>
 
           {/* Form Section */}
