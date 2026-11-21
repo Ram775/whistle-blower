@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { User, Save, Loader2 } from "lucide-react";
 import { authService } from "../../services/authService";
 import { useAuth } from "../../context/AuthContext";
-import toast from "react-hot-toast";
+import { notify } from "../../utils/notify";
+
 
 const Profile = () => {
   const { user } = useAuth();
@@ -33,11 +34,11 @@ const Profile = () => {
     try {
       const response = await authService.updateProfile(profileData);
       if (response.status) {
-        toast.success("Profile updated successfully!");
+        notify.success("Profile updated successfully!");
         setTimeout(() => window.location.reload(), 1000);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update profile");
+      notify.error(error.response?.data?.message || "Failed to update profile");
     } finally {
       setLoading(false);
     }

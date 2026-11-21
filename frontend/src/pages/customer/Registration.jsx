@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { masterService } from "../../services/masterService";
 import { complaintService } from "../../services/complaintService";
-import toast from "react-hot-toast";
+import { notify } from "../../utils/notify"; 
 
 const Registration = () => {
   const navigate = useNavigate();
@@ -81,7 +81,7 @@ const Registration = () => {
         if (angleRes.data) setAngles(angleRes.data);
         if (stateRes.data) setStates(stateRes.data);
       } catch (err) {
-        toast.error("Failed to load form data");
+        notify.error("Failed to load form data");
       }
     };
     fetchDropdowns();
@@ -102,7 +102,7 @@ const Registration = () => {
         const response = await masterService.getDistrictsByState(stateId);
         if (response.data) setDistricts(response.data);
       } catch (err) {
-        toast.error("Failed to load districts");
+        notify.error("Failed to load districts");
       }
     }
   };
@@ -116,7 +116,7 @@ const Registration = () => {
         const response = await masterService.getCitiesByDistrict(districtId);
         if (response.data) setCities(response.data);
       } catch (err) {
-        toast.error("Failed to load cities");
+        notify.error("Failed to load cities");
       }
     }
   };
@@ -133,7 +133,7 @@ const Registration = () => {
   const handleSendOtp = async (e) => {
     e.preventDefault();
     if (!email || !email.includes("@")) {
-      toast.error("Please enter a valid email address.");
+      notify.error("Please enter a valid email address.");
       return;
     }
     setLoading(true);
@@ -141,10 +141,10 @@ const Registration = () => {
       const response = await complaintService.sendOtp(email);
       if (response.success) {
         setOtpToken(response.otp_token);
-        toast.success("OTP sent to your email. Please check.");
+        notify.success("OTP sent to your email. Please check.");
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to send OTP");
+      notify.error(err.response?.data?.message || "Failed to send OTP");
     } finally {
       setLoading(false);
     }
@@ -153,7 +153,7 @@ const Registration = () => {
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     if (!otp || otp.length !== 6) {
-      toast.error("Please enter a valid 6-digit OTP.");
+      notify.error("Please enter a valid 6-digit OTP.");
       return;
     }
     setLoading(true);
@@ -162,10 +162,23 @@ const Registration = () => {
       if (response.success) {
         setVerifiedToken(response.verified_token);
         setStep(2);
-        toast.success("Email verified successfully!");
+        notify.success("Email verified successfully!");
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Invalid OTP");
+      const data = err.response?.data;
+
+      // ✅ Naya Logic: Agar email already registered hai
+      if (data?.email_registered) {
+        // Custom icon ki jagah warning use kiya hai
+        notify.warning(data.message || "This email is already registered.");
+        
+        // 2. User ko 2 second baad /login pe redirect kar do
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+      } else {
+        notify.error(data?.message || "Invalid OTP. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -184,7 +197,7 @@ const Registration = () => {
   const handleNext = (e) => {
     e.preventDefault();
     if (formData.city_id === "0" && !formData.city_name.trim()) {
-      toast.error("Please enter city name for 'Other' option");
+      notify.error("Please enter city name for 'Other' option");
       return;
     }
     setStep(step + 1);
@@ -201,14 +214,14 @@ const Registration = () => {
     setLoading(true);
 
     if (!idPhoto) {
-      toast.error("ID Photo is required. Please upload a file.");
+      notify.error("ID Photo is required. Please upload a file.");
       setLoading(false);
       return;
     }
 
     const submitData = new FormData();
     Object.keys(formData).forEach((key) =>
-      submitData.append(key, formData[key])
+      submitData.append(key, formData[key]),
     );
     submitData.append("email_id", email);
     submitData.append("verified_token", verifiedToken);
@@ -218,14 +231,14 @@ const Registration = () => {
     try {
       const response = await complaintService.submitComplaint(submitData);
       if (response.success) {
-        toast.success(
-          `Complaint registered! Your Complaint No: ${response.complaint_no}`
+        notify.success(
+          `Complaint registered! Your Complaint No: ${response.complaint_no}`,
         );
         navigate("/login");
       }
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to register complaint."
+      notify.error(
+        err.response?.data?.message || "Failed to register complaint.",
       );
     } finally {
       setLoading(false);
@@ -259,13 +272,15 @@ const Registration = () => {
                   Whistleblower Registration
                 </h2>
                 <p className="text-xs text-[#d2dfff] mt-1">
-                  Your identity and disclosure details are strictly protected & encrypted
+                  Your identity and disclosure details are strictly protected &
+                  encrypted
                 </p>
               </div>
             </div>
 
             <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider bg-white/10 text-[#d2dfff] px-3.5 py-1.5 rounded-full self-start sm:self-center">
-              <Lock className="w-3.5 h-3.5 text-emerald-400" /> Confidential Portal
+              <Lock className="w-3.5 h-3.5 text-emerald-400" /> Confidential
+              Portal
             </span>
           </div>
 
@@ -281,8 +296,8 @@ const Registration = () => {
                     isActive
                       ? "bg-white/15 ring-1 ring-white/30"
                       : isCompleted
-                      ? "bg-emerald-500/15"
-                      : "opacity-55"
+                        ? "bg-emerald-500/15"
+                        : "opacity-55"
                   }`}
                 >
                   <div
@@ -290,8 +305,8 @@ const Registration = () => {
                       isCompleted
                         ? "bg-emerald-500 text-white"
                         : isActive
-                        ? "bg-white text-[#1b2a5e]"
-                        : "bg-white/20 text-white"
+                          ? "bg-white text-[#1b2a5e]"
+                          : "bg-white/20 text-white"
                     }`}
                   >
                     {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : s.id}
@@ -331,7 +346,8 @@ const Registration = () => {
                   Verify Your Email Address
                 </h3>
                 <p className="text-xs text-gray-500">
-                  We will send a 6-digit One-Time Password (OTP) to authenticate your session.
+                  We will send a 6-digit One-Time Password (OTP) to authenticate
+                  your session.
                 </p>
               </div>
 
@@ -376,7 +392,8 @@ const Registration = () => {
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label className={labelClass}>
-                        Enter 6-Digit OTP <span className="text-red-500">*</span>
+                        Enter 6-Digit OTP{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <span className="text-xs font-semibold text-emerald-600">
                         OTP Sent!
@@ -425,7 +442,8 @@ const Registration = () => {
                   <span>Contact & Residential Address</span>
                 </h3>
                 <span className="text-xs text-gray-500">
-                  <span className="text-red-500 font-bold">*</span> Mandatory fields
+                  <span className="text-red-500 font-bold">*</span> Mandatory
+                  fields
                 </span>
               </div>
 

@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { masterService } from "../../services/masterService";
 import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Tooltip, Modal } from "antd";
-import toast from "react-hot-toast";
+
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -84,7 +84,7 @@ const MasterData = () => {
       const response = await getService().list();
       if (response.data) setApiData(response.data);
     } catch (error) {
-      toast.error(`Failed to load ${currentTabLabel}`);
+      notify.error(`Failed to load ${currentTabLabel}`);
     } finally {
       setLoading(false);
     }
@@ -125,15 +125,15 @@ const MasterData = () => {
 
       if (editId) {
         await getService().update(editId, payload);
-        toast.success(`${currentTabLabel} updated successfully!`);
+        notify.success(`${currentTabLabel} updated successfully!`);
       } else {
         await getService().create(payload);
-        toast.success(`${currentTabLabel} created successfully!`);
+        notify.success(`${currentTabLabel} created successfully!`);
       }
       setShowModal(false);
       fetchList();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Operation failed");
+      notify.error(error.response?.data?.message || "Operation failed");
     }
   };
 
@@ -148,10 +148,10 @@ const MasterData = () => {
         try {
           setLoading(true);
           await getService().remove([id]);
-          toast.success(`${currentTabLabel} deleted successfully!`);
+          notify.success(`${currentTabLabel} deleted successfully!`);
           fetchList();
         } catch (error) {
-          toast.error("Delete failed");
+          notify.error("Delete failed");
           setLoading(false);
         }
       },
@@ -159,7 +159,7 @@ const MasterData = () => {
   };
 
   const handleBulkDelete = () => {
-    if (selectedIds.length === 0) return toast.warning("Please select at least one record.");
+    if (selectedIds.length === 0) return notify.warning("Please select at least one record.");
     confirm({
       title: "Delete Confirmation",
       icon: <ExclamationCircleOutlined />,
@@ -170,11 +170,11 @@ const MasterData = () => {
         try {
           setLoading(true);
           await getService().remove(selectedIds);
-          toast.success(`Records deleted successfully!`);
+          notify.success(`Records deleted successfully!`);
           setSelectedIds([]);
           fetchList();
         } catch (error) {
-          toast.error("Delete failed");
+          notify.error("Delete failed");
           setLoading(false);
         }
       },
@@ -185,10 +185,10 @@ const MasterData = () => {
     const newStatus = String(currentStatus) === "1" ? "0" : "1";
     try {
       await getService().status(id, newStatus);
-      toast.success("Status updated!");
+      notify.success("Status updated!");
       fetchList();
     } catch (error) {
-      toast.error("Failed to update status");
+      notify.error("Failed to update status");
     }
   };
 

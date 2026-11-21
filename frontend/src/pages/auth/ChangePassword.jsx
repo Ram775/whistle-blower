@@ -3,7 +3,8 @@ import { Form, Input } from "antd";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, Circle, CircleAlert, ShieldCheck } from "lucide-react";
 import { authService } from "../../services/authService"; // 2nd code ka path
-import toast from "react-hot-toast";
+import { notify } from "../../utils/notify";
+
 
 const ChangePassword = () => {
   const [form] = Form.useForm();
@@ -34,20 +35,20 @@ const ChangePassword = () => {
     const allowedRegex = /^[A-Za-z0-9@#$&]$/;
     if (e.key.length === 1 && !allowedRegex.test(e.key)) {
       e.preventDefault();
-      toast.error("Only alphanumeric and @ # $ & characters allowed");
+      notify.error("Only alphanumeric and @ # $ & characters allowed");
     }
   };
 
   // Prevent Paste/Copy
   const handlePaste = (e) => {
     e.preventDefault();
-    toast.error("Copy/Paste is not allowed");
+    notify.error("Copy/Paste is not allowed");
   };
 
   // 2nd code wala logic (API Payload)
   const onFinish = async (values) => {
     if (!Object.values(checks).every(Boolean)) {
-      toast.error("Please fulfill all password requirements!");
+      notify.error("Please fulfill all password requirements!");
       return;
     }
 
@@ -64,13 +65,13 @@ const ChangePassword = () => {
 
       // Agar API success status deti hai (2nd code ke hisaab se)
       if (response.status) {
-        toast.success("Password updated successfully!");
+        notify.success("Password updated successfully!");
         form.resetFields(); // Form clear karo
         // Successful change ke baad navigate karna ho toh kar sakte hain
         // navigate("/admin/dashboard");
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to change password");
+      notify.error(error.response?.data?.message || "Failed to change password");
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { UserPlus, Edit, Trash2, Loader2, UserX } from "lucide-react";
 import { userService } from "../../services/userService";
-import toast from "react-hot-toast";
+
 import { Tooltip, Modal } from "antd";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
@@ -55,7 +55,7 @@ const UserList = () => {
         setApiData(response.data || []);
       }
     } catch (error) {
-      toast.error("Failed to fetch users");
+      notify.error("Failed to fetch users");
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,7 @@ const UserList = () => {
           });
         }
       } catch (error) {
-        toast.error("Failed to load user");
+        notify.error("Failed to load user");
       } finally {
         setLoading(false);
       }
@@ -105,15 +105,15 @@ const UserList = () => {
         const payload = { ...formData };
         if (!payload.password) delete payload.password; // Empty password na bheje
         await userService.updateUser(editId, payload);
-        toast.success("User updated successfully!");
+        notify.success("User updated successfully!");
       } else {
         await userService.createUser(formData);
-        toast.success("User created successfully!");
+        notify.success("User created successfully!");
       }
       setShowModal(false);
       fetchUsers();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Operation failed");
+      notify.error(error.response?.data?.message || "Operation failed");
     }
   };
 
@@ -123,11 +123,11 @@ const UserList = () => {
     try {
       const response = await userService.changeUserStatus(id, newStatus);
       if (response.status) {
-        toast.success("User status updated!");
+        notify.success("User status updated!");
         fetchUsers();
       }
     } catch (error) {
-      toast.error("Failed to update status");
+      notify.error("Failed to update status");
     }
   };
 
@@ -143,7 +143,7 @@ const UserList = () => {
         try {
           setLoading(true);
           await userService.changeUserStatus(id, "0");
-          toast.success("User deactivated successfully!");
+          notify.success("User deactivated successfully!");
           fetchUsers();
         } catch (error) {
           toast.error("Operation failed");

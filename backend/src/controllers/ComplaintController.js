@@ -52,16 +52,65 @@ export const sendOtp = async (req, res) => {
     }
 };
 
+// export const verifyOtp = async (req, res) => {
+//     try {
+//         const { otp, otp_token } = req.body;
+//         if (!otp_token) return res.status(400).json({ success: false, message: 'OTP session invalid' });
+
+//         const decoded = jwt.verify(otp_token, process.env.JWT_SECRET);
+//         if (decoded.otp !== otp) {
+//             return res.status(400).json({ success: false, message: 'Invalid OTP' });
+//         }
+
+//         const verifiedToken = jwt.sign(
+//             { email_verified: decoded.email },
+//             process.env.JWT_SECRET,
+//             { expiresIn: '15m' }
+//         );
+
+//         return res.status(200).json({
+//             success: true,
+//             message: 'OTP verified successfully',
+//             verified_token: verifiedToken
+//         });
+//     } catch (error) {
+//         return res.status(400).json({ success: false, message: 'OTP expired or invalid' });
+//     }
+// };
+
+
+
 export const verifyOtp = async (req, res) => {
     try {
         const { otp, otp_token } = req.body;
-        if (!otp_token) return res.status(400).json({ success: false, message: 'OTP session invalid' });
+        if (!otp_token) return res.status(400).json({ success: false, message: 'OTP session expired. Please request a new OTP.' });
 
-        const decoded = jwt.verify(otp_token, process.env.JWT_SECRET);
-        if (decoded.otp !== otp) {
-            return res.status(400).json({ success: false, message: 'Invalid OTP' });
+        // 1. OTP Verify
+        let decoded;
+        try {
+            decoded = jwt.verify(otp_token, process.env.JWT_SECRET);
+        } catch (err) {
+            return res.status(400).json({ success: false, message: 'OTP expired. Please request a new OTP.' });
         }
 
+        if (decoded.otp !== otp) {
+            return res.status(400).json({ success: false, message: 'Invalid OTP. Please enter the correct code.' });
+        }
+
+        // ✅ 2. CHECK: Email already registered?
+        const existingUser = await User.findOne({ 
+            where: { email_id: decoded.email.toLowerCase() } 
+        });
+
+        if (existingUser) {
+            return res.status(409).json({ 
+                success: false, 
+                email_registered: true,
+                message: 'This email is already registered. Please login to your account to submit a new complaint.' 
+            });
+        }
+
+        // 3. OTP Verified Successfully
         const verifiedToken = jwt.sign(
             { email_verified: decoded.email },
             process.env.JWT_SECRET,
@@ -70,13 +119,15 @@ export const verifyOtp = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: 'OTP verified successfully',
+            message: 'Email verified successfully. Please fill the complaint form.',
             verified_token: verifiedToken
         });
     } catch (error) {
-        return res.status(400).json({ success: false, message: 'OTP expired or invalid' });
+        console.error('Verify OTP Error:', error);
+        return res.status(400).json({ success: false, message: 'OTP verification failed. Please try again.' });
     }
 };
+
 
 export const submitComplaint = async (req, res) => {
     try {
@@ -304,45 +355,108 @@ export const updateComplaintStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { complaint_status, comment } = req.body;
-        const adminUser = req.user; // auth middleware se aata hai
+        const adminUser = req.user;
 
         const complaint = await Complaint.findByPk(id);
         if (!complaint) {
-            return res.status(404).json({ status: false, message: 'Complaint not found' });
+            return res.status(404).json({ status: false, message: 'Complaint not found.' });
         }
 
-        // 1. Status History me entry
+        const currentStatus = Number(complaint.complaint_status);
+        const newStatus = Number(complaint_status);
+
+        // ✅ Validation 1: Valid status check
+        if (![1, 2, 3].includes(newStatus)) {
+            return res.status(400).json({ 
+                status: false, 
+                message: 'Invalid status. Please select a valid status value.' 
+            });
+        }
+
+        // ✅ Validation 2: Already Disposed = locked
+        if (currentStatus === 3) {
+            return res.status(400).json({ 
+                status: false, 
+                message: 'This complaint has already been disposed. No further changes are allowed.' 
+            });
+        }
+
+        // ✅ Validation 3: Backward movement not allowed
+        if (newStatus < currentStatus) {
+            return res.status(400).json({ 
+                status: false, 
+                message: `Cannot move backward. Complaint is currently "${getStatusText(currentStatus)}". Status can only move forward.` 
+            });
+        }
+
+        // ✅ Validation 4: Same status not allowed
+        if (newStatus === currentStatus) {
+            return res.status(400).json({ 
+                status: false, 
+                message: `Complaint is already in "${getStatusText(currentStatus)}" status. Please select the next status.` 
+            });
+        }
+
+        // ✅ Validation 5: No skipping steps
+        if (newStatus > currentStatus + 1) {
+            return res.status(400).json({ 
+                status: false, 
+                message: `Cannot skip steps. You must move from "${getStatusText(currentStatus)}" to "${getStatusText(currentStatus + 1)}" first.` 
+            });
+        }
+
+        // ✅ Sab validations pass, ab history create karo
         await ComplaintStatusHistory.create({
             complaint_id: complaint.id,
             user_id: adminUser.id,
-            complaint_status: Number(complaint_status), // ✅ Number me convert
-            comment: comment || null // ✅ Null safe
+            complaint_status: newStatus,
+            comment: comment || null
         });
 
-        // 2. Complaint table me status update
+        // ✅ Complaint update
         await complaint.update({
-            complaint_status: Number(complaint_status), // ✅ Number me
+            complaint_status: newStatus,
             last_updated_by: adminUser.id
         });
 
-        // 3. Customer ko email (agar chaho toh)
+        // ✅ Customer ko email
         try {
             const user = await User.findByPk(complaint.user_id);
             if (user && user.email_id) {
-                const statusText = complaint_status == 1 ? 'Pending' : complaint_status == 2 ? 'Under Processing' : 'Disposed';
+                const statusText = getStatusText(newStatus);
                 const { sendStatusUpdateEmail } = await import('../utils/mailer.js');
-                await sendStatusUpdateEmail(user.email_id, user.first_name, complaint.complaint_no, statusText, comment);
+                await sendStatusUpdateEmail(
+                    user.email_id, 
+                    user.first_name, 
+                    complaint.complaint_no, 
+                    statusText, 
+                    comment
+                );
             }
         } catch (emailError) {
             console.error('Email failed but status updated:', emailError.message);
         }
 
-        return res.status(200).json({ status: true, message: 'Status updated successfully' });
+        return res.status(200).json({ 
+            status: true, 
+            message: `Status updated successfully to "${getStatusText(newStatus)}".` 
+        });
 
     } catch (error) {
         console.error('Update Status Error:', error);
-        return res.status(500).json({ status: false, message: error.message || 'Internal Server Error' });
+        return res.status(500).json({ 
+            status: false, 
+            message: 'Failed to update complaint status. Please try again.' 
+        });
     }
+};
+
+// ✅ Helper: Status text nikalne ke liye
+const getStatusText = (status) => {
+    if (status === 1) return 'Pending';
+    if (status === 2) return 'Under Processing';
+    if (status === 3) return 'Disposed';
+    return 'Unknown';
 };
 
 
@@ -427,9 +541,6 @@ export const getMyComplaints = async (req, res) => {
         return res.status(500).json({ status: false, message: 'Internal Server Error' });
     }
 };
-
-
-
 
 
 export const generateComplaintPdf = async (req, res) => {
@@ -530,5 +641,90 @@ export const generateComplaintPdf = async (req, res) => {
     } catch (error) {
         console.error('PDF Generation Error:', error);
         return res.status(500).json({ status: false, message: 'Failed to generate PDF' });
+    }
+};
+
+
+// ================= EDIT COMPLAINT =================
+export const editComplaint = async (req, res) => {
+    try {
+        const complaint = await Complaint.findByPk(req.params.id);
+        
+        if (!complaint) {
+            return res.status(404).json({ status: false, message: 'Complaint not found.' });
+        }
+
+        // ✅ Authorization: Sirf owner edit kar sakta hai
+        if (Number(complaint.user_id) !== Number(req.user.id)) {
+            return res.status(403).json({ status: false, message: 'Unauthorized: You can only edit your own complaints.' });
+        }
+
+        return res.status(200).json({ status: true, data: complaint });
+    } catch (error) {
+        console.error('Edit Complaint Error:', error);
+        return res.status(500).json({ status: false, message: 'Failed to load complaint.' });
+    }
+};
+
+// ================= UPDATE COMPLAINT =================
+export const updateComplaint = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const complaint = await Complaint.findByPk(id);
+
+        if (!complaint) {
+            return res.status(404).json({ status: false, message: 'Complaint not found.' });
+        }
+
+        // ✅ Authorization: Sirf owner update kar sakta hai
+        if (Number(complaint.user_id) !== Number(req.user.id)) {
+            return res.status(403).json({ status: false, message: 'Unauthorized: You can only update your own complaints.' });
+        }
+
+          if (Number(complaint.complaint_status) !== 1) {
+            return res.status(403).json({ 
+                status: false, 
+                message: 'This complaint cannot be edited. Only pending complaints can be modified.' 
+            });
+        }
+
+        // ✅ Whitelist: Sirf ye fields update honge (mass assignment se bachne ke liye)
+        const updateData = {
+            determinationof_vigilance_angle_id: req.body.determinationof_vigilance_angle_id || complaint.determinationof_vigilance_angle_id,
+            disclosure_against: req.body.disclosure_against || complaint.disclosure_against,
+            complaint_description: req.body.complaint_description || complaint.complaint_description,
+            remarks: req.body.remarks || complaint.remarks,
+        };
+
+        // File upload (agar naya document aaya hai)
+        if (req.file || (req.files && req.files['complaint_document'])) {
+            const newDoc = req.file ? req.file.filename : req.files['complaint_document'][0].filename;
+            
+            // Purani file delete karo
+            if (complaint.complaint_document) {
+                const oldPath = path.join(process.cwd(), 'uploads', 'complaintdocument', complaint.complaint_document);
+                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+            }
+            updateData.complaint_document = newDoc;
+        }
+
+        await complaint.update(updateData);
+
+        // Status History me entry
+        await ComplaintStatusHistory.create({
+            complaint_id: complaint.id,
+            user_id: req.user.id,
+            complaint_status: complaint.complaint_status,
+            comment: 'Complaint details updated by whistleblower'
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: 'Complaint updated successfully.',
+        });
+
+    } catch (error) {
+        console.error('Update Complaint Error:', error);
+        return res.status(500).json({ status: false, message: 'Failed to update complaint.' });
     }
 };

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Plus, Trash2, Image as ImageIcon, Loader2 } from "lucide-react";
 import { settingsService } from "../../services/settingsService";
-import toast from "react-hot-toast";
+
 import { Tooltip, Modal } from "antd";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
@@ -50,7 +50,7 @@ const SliderList = () => {
       const response = await settingsService.getSliders();
       if (response.data) setApiData(response.data);
     } catch (error) {
-      toast.error("Failed to fetch sliders");
+      notify.error("Failed to fetch sliders");
     } finally {
       setLoading(false);
     }
@@ -72,10 +72,10 @@ const SliderList = () => {
       const response = await settingsService.uploadSingleImage(uploadData);
       if (response.status) {
         setFormData({ ...formData, image: response.filename });
-        toast.success("Image uploaded!");
+        notify.success("Image uploaded!");
       }
     } catch (error) {
-      toast.error("Image upload failed.");
+      notify.error("Image upload failed.");
     } finally {
       setIsUploading(false);
     }
@@ -86,12 +86,12 @@ const SliderList = () => {
     e.preventDefault();
     try {
       await settingsService.createSlider(formData);
-      toast.success("Slider added successfully!");
+      notify.success("Slider added successfully!");
       setShowModal(false);
       setFormData({ image: null, alt_tag: "", sort_order: 0, status: "1" });
       fetchSliders();
     } catch (error) {
-      toast.error("Failed to save slider");
+      notify.error("Failed to save slider");
     }
   };
 
@@ -100,10 +100,10 @@ const SliderList = () => {
     const newStatus = String(currentStatus) === "1" ? "0" : "1";
     try {
       await settingsService.changeSliderStatus(id, newStatus);
-      toast.success("Status updated!");
+      notify.success("Status updated!");
       fetchSliders();
     } catch (error) {
-      toast.error("Failed to update status");
+      notify.error("Failed to update status");
     }
   };
 
@@ -119,10 +119,10 @@ const SliderList = () => {
         try {
           setLoading(true);
           await settingsService.deleteSliders([id]);
-          toast.success("Slider deleted!");
+          notify.success("Slider deleted!");
           fetchSliders();
         } catch (error) {
-          toast.error("Delete failed");
+          notify.error("Delete failed");
           setLoading(false);
         }
       },

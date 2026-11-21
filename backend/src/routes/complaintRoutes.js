@@ -8,7 +8,9 @@ import {
     updateComplaintStatus,
     getComplaintById,
     getMyComplaints,
-    generateComplaintPdf
+    generateComplaintPdf,
+     editComplaint,
+    updateComplaint,
 } from '../controllers/ComplaintController.js';
 import {
     submitComplaintValidator,
@@ -60,6 +62,22 @@ router.post(
 
 router.get('/my-complaints', auth, allowRoles(3), complaintReadLimiter, getMyComplaints);
 router.get('/my-complaints/:id', auth, allowRoles(3), complaintReadLimiter, getComplaintById);
+router.get(
+    '/my-complaints/:id/edit',
+    auth, allowRoles(3),
+    complaintReadLimiter,
+    editComplaint
+);
+
+
+router.put(
+    '/my-complaints/:id',
+    auth, allowRoles(3),
+    complaintSubmitLimiter,  // Reuse submit limiter
+    upload.single('complaint_document'),
+    verifyUploadedFiles,     // ✅ File verification
+    updateComplaint
+);
 
 // ================= ADMIN =================
 router.get('/admin/all', auth, allowRoles(1, 2), complaintReadLimiter, getAllComplaints);

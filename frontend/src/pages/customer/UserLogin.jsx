@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/authService';
 import { ShieldCheck, KeyRound, AlertTriangle, CreditCard, Calendar, ArrowRight, Lock } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { notify } from '../../utils/notify'; // 👈 Custom notify import
 
 const UserLogin = () => {
     const [formData, setFormData] = useState({
@@ -24,27 +24,30 @@ const UserLogin = () => {
         setAttemptsLeft(null);
         setIsBlocked(false);
 
+        // Optional: Loading toast start (agar chaho toh use karo)
+        // notify.loading("Verifying identity...");
+
         try {
             const response = await authService.customerLogin(formData);
             
             if (response.status) {
                 login(response.user, response.token);
-                toast.success(`Welcome back, ${response.user.first_name || 'User'}!`);
+                notify.success(`Welcome back, ${response.user.first_name || 'User'}!`);
                 navigate('/dashboard');
             } else {
-                toast.error(response.message || 'Login failed.');
+                notify.error(response.message || 'Login failed.');
             }
         } catch (err) {
             const data = err.response?.data;
 
             if (data?.blocked) {
                 setIsBlocked(true);
-                toast.error("Your IP has been blocked due to too many failed attempts.");
+                notify.error("Your IP has been blocked due to too many failed attempts.");
             } else if (data?.attempts_remaining !== undefined) {
                 setAttemptsLeft(data.attempts_remaining);
-                toast.error(data.message || "Invalid Credentials.");
+                notify.error(data.message || "Invalid Credentials.");
             } else {
-                toast.error(data?.message || 'Invalid Login Details.');
+                notify.error(data?.message || 'Invalid Login Details.');
             }
         } finally {
             setLoading(false);
