@@ -29,29 +29,15 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
       path: null,
       icon: Box,
       subMenus: [
-        {
-          name: "Country",
-          path: "/admin/master?tab=countries",
-        },
-        {
-          name: "State",
-          path: "/admin/master?tab=states",
-        },
-        {
-          name: "District",
-          path: "/admin/master?tab=districts",
-        },
-        {
-          name: "City",
-          path: "/admin/master?tab=cities",
-        },
-        {
-          name: "Event",
-          path: "/admin/master?tab=vigilance-angles",
-        },
+        { name: "Country", path: "/admin/master/country", icon: Globe },
+        { name: "State", path: "/admin/master/state", icon: Map },
+        { name: "District", path: "/admin/master/district", icon: MapPin },
+        { name: "City", path: "/admin/master/city", icon: Building2 },
+        { name: "Event", path: "/admin/master/event", icon: Calendar },
         {
           name: "Disclosure Detail",
-          path: "/admin/master?tab=disclosure-details",
+          path: "/admin/master/disclosure-detail",
+          icon: FileText,
         },
       ],
     },
@@ -86,7 +72,7 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
         NavData={userMenu}
         collapsed={collapsed}
         setCollapsed={setCollapsed}
-         title={role || "Admin Panel"}
+        title={role || "Admin Panel"}
       />
     </div>
   );

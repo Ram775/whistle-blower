@@ -30,6 +30,13 @@ import UserLayout from "./layouts/UserLayout";
 import Unauthorized from "./pages/Unauthorized";
 import EditComplaint from "./pages/customer/EditComplaint";
 
+import CountryPage from "./pages/admin/master/CountryPage";
+import StatePage from "./pages/admin/master/StatePage";
+import DistrictPage from "./pages/admin/master/DistrictPage";
+import CityPage from "./pages/admin/master/CityPage";
+import EventPage from "./pages/admin/master/EventPage";
+import DisclosureDetailPage from "./pages/admin/master/DisclosureDetailPage";
+
 const App = () => {
   return (
     <AuthProvider>
@@ -56,7 +63,16 @@ const App = () => {
             <Route path="/admin/complaints/:id" element={<ComplaintView />} />
             <Route path="/admin/users" element={<UserList />} />
             <Route path="/admin/sliders" element={<SliderList />} />
-            <Route path="/admin/master" element={<MasterData />} />
+            {/* <Route path="/admin/master" element={<MasterData />} /> */}
+            <Route path="/admin/master/country" element={<CountryPage />} />
+            <Route path="/admin/master/state" element={<StatePage />} />
+            <Route path="/admin/master/district" element={<DistrictPage />} />
+            <Route path="/admin/master/city" element={<CityPage />} />
+            <Route path="/admin/master/event" element={<EventPage />} />
+            <Route
+              path="/admin/master/disclosure-detail"
+              element={<DisclosureDetailPage />}
+            />
             <Route path="/admin/settings" element={<Settings />} />
             <Route path="/admin/profile" element={<Profile />} />
             <Route path="/admin/change-password" element={<ChangePassword />} />

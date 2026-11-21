@@ -9,6 +9,7 @@ import {
   FileDown,
   Loader2,
   ShieldAlert,
+  CheckCircle,
 } from "lucide-react";
 import api from "../../api/axios";
 import { complaintService } from "../../services/complaintService";
@@ -35,7 +36,7 @@ const ComplaintView = () => {
       if (response.data.status) {
         setComplaint(response.data.data);
         setStatusData({
-          complaint_status: '',
+          complaint_status: "",
           comment: "",
         });
       }
@@ -240,8 +241,7 @@ const ComplaintView = () => {
         {/* RIGHT COLUMN (Status & History) */}
         <div className="space-y-6">
           {/* Update Status Form */}
-          {/* Update Status Form */}
-          <div className="bg-white rounded-lg shadow p-6 border-t-4 border-blue-500">
+          <div className="bg-white rounded-lg p-6 ">
             <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
               <Clock className="w-5 h-5 mr-2 text-blue-500" /> Update Status
             </h2>
@@ -299,7 +299,7 @@ const ComplaintView = () => {
                 <button
                   type="submit"
                   disabled={updateLoading || !statusData.complaint_status}
-                  className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300 font-medium"
+                  className="w-full btn_base btn_primary bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300 font-medium"
                 >
                   {updateLoading ? "Updating..." : "Update Status"}
                 </button>
