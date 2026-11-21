@@ -56,11 +56,11 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
       path: "/admin/settings",
       icon: Settings,
     },
-    {
-      name: "Sliders",
-      path: "/admin/sliders",
-      icon: ImageIcon,
-    },
+    // {
+    //   name: "Sliders",
+    //   path: "/admin/sliders",
+    //   icon: ImageIcon,
+    // },
   ];
 
   return (

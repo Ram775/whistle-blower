@@ -12,7 +12,7 @@ import ComplaintView from "./pages/admin/ComplaintView";
 import MasterData from "./pages/admin/MasterData";
 import Settings from "./pages/admin/Settings";
 import UserList from "./pages/admin/UserList";
-import SliderList from "./pages/admin/SliderList";
+// import SliderList from "./pages/admin/SliderList";
 
 // Customer Pages
 import UserLogin from "./pages/customer/UserLogin";
@@ -62,7 +62,7 @@ const App = () => {
             <Route path="/admin/complaints" element={<ComplaintList />} />
             <Route path="/admin/complaints/:id" element={<ComplaintView />} />
             <Route path="/admin/users" element={<UserList />} />
-            <Route path="/admin/sliders" element={<SliderList />} />
+            {/* <Route path="/admin/sliders" element={<SliderList />} /> */}
             {/* <Route path="/admin/master" element={<MasterData />} /> */}
             <Route path="/admin/master/country" element={<CountryPage />} />
             <Route path="/admin/master/state" element={<StatePage />} />
