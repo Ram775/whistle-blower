@@ -5,6 +5,24 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+
+const logoPath = path.join(process.cwd(), "uploads", "logo", "logo.png");
+
+const getLogoAttachments = () => {
+  if (!fs.existsSync(logoPath)) return [];
+  return [
+    {
+      filename: "logo.png",
+      path: logoPath,
+      cid: "company-logo",
+    },
+  ];
+};
+
+
+
+
+
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: process.env.EMAIL_PORT || 587,
@@ -22,6 +40,7 @@ const getUploadPath = (folder, filename) => {
 };
 
 // Shared premium email layout. Presentation-only helper; mail/business logic is unchanged.
+// Shared email layout. Presentation-only helper; mail/business logic is unchanged.
 const wrapEmailTemplate = (content, headerColor = '#17324f', headerTitle = 'Whistle-Blower Portal') => `
     <!DOCTYPE html>
     <html lang="en">
@@ -36,46 +55,56 @@ const wrapEmailTemplate = (content, headerColor = '#17324f', headerTitle = 'Whis
                 font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             }
             @media only screen and (max-width: 620px) {
-                .email-outer { padding: 18px 10px !important; }
+                .email-outer { padding: 16px 10px !important; }
                 .email-card { border-radius: 10px !important; }
-                .email-header { padding: 25px 22px !important; }
-                .email-body { padding: 27px 22px !important; }
-                .email-footer { padding: 20px 22px !important; }
-                .email-title { font-size: 19px !important; }
+                .email-header { padding: 26px 18px 20px !important; }
+                .email-body { padding: 22px 20px 30px !important; }
+                .email-footer { padding: 20px 20px !important; }
+                .email-module-title { font-size: 18px !important; }
                 .email-copy { font-size: 14px !important; }
+                .logo-img { width: 120px !important; max-height: 120px !important; }
             }
         </style>
     </head>
     <body style="margin:0;padding:0;background-color:#f3f6fa;color:#243449;font-family:Inter,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background-color:#f3f6fa;">
             <tr>
-                <td class="email-outer" align="center" style="padding:38px 14px;">
-                    <table class="email-card" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e4eaf1;border-radius:14px;overflow:hidden;box-shadow:0 8px 28px rgba(25,45,70,.07);">
+                <td class="email-outer" align="center" style="padding:36px 14px;">
+                    <table class="email-card" role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e4eaf1;border-radius:14px;overflow:hidden;box-shadow:0 8px 28px rgba(25,45,70,.07);">
                         <tr>
                             <td style="height:5px;background-color:${headerColor};font-size:0;line-height:0;">&nbsp;</td>
                         </tr>
                         <tr>
-                            <td class="email-header" style="padding:30px 38px 25px;background:#ffffff;border-bottom:1px solid #edf1f5;">
+                            <td class="email-header" align="center" style="padding:32px 32px 22px;background:#ffffff;text-align:center;border-bottom:1px dashed #cbd5e1;">
                                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
                                     <tr>
-                                        <td align="left" style="vertical-align:middle;">
-                                            <div style="font-size:10px;line-height:1.4;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#8290a2;">Secure communication</div>
-                                            <h1 class="email-title" style="margin:8px 0 0;color:#172b43;font-size:21px;line-height:1.35;font-weight:700;letter-spacing:-.35px;">${headerTitle}</h1>
+                                        <td align="center" style="text-align:center;">
+                                            <img
+                                                class="logo-img"
+                                                src="cid:company-logo"
+                                                alt="${headerTitle} Logo"
+                                                width="320"
+                                                style="display:block;margin:0 auto;width:320px;max-width:100%;max-height:220px;height:auto;border:0;outline:none;text-decoration:none;object-fit:contain;"
+                                            />
                                         </td>
-                                        <td align="right" style="vertical-align:middle;">
-                                            <span style="display:inline-block;padding:7px 10px;border:1px solid #e5ebf2;border-radius:6px;background:#f8fafc;color:#64748b;font-size:10px;line-height:1;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">Official notice</span>
+                                    </tr>
+                                    <tr>
+                                        <td align="center" style="padding-top:16px;text-align:center;">
+                                            <div class="email-module-title" style="margin:0;color:#1e293b;font-size:25px;line-height:1.5;font-weight:700;letter-spacing:0.5px;">
+                                                ${headerTitle}
+                                            </div>
                                         </td>
                                     </tr>
                                 </table>
                             </td>
                         </tr>
                         <tr>
-                            <td class="email-body email-copy" style="padding:36px 38px 38px;color:#435267;font-size:14px;line-height:1.75;font-family:Inter,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                            <td class="email-body email-copy" style="padding:24px 36px 34px;color:#435267;font-size:14px;line-height:1.75;font-family:Inter,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
                                 ${content}
                             </td>
                         </tr>
                         <tr>
-                            <td class="email-footer" style="padding:22px 38px;background:#f8fafc;border-top:1px solid #e9eef4;text-align:center;">
+                            <td class="email-footer" style="padding:20px 32px;background:#f8fafc;border-top:1px solid #e9eef4;text-align:center;">
                                 <p style="margin:0;color:#78879a;font-size:11px;line-height:1.7;font-family:Inter,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
                                     &copy; ${new Date().getFullYear()} Whistle-Blower Portal. All rights reserved.<br>
                                     This is an automated system notification. Please do not reply directly to this email.
@@ -83,7 +112,7 @@ const wrapEmailTemplate = (content, headerColor = '#17324f', headerTitle = 'Whis
                             </td>
                         </tr>
                     </table>
-                    <div style="padding:16px 10px 0;color:#9aa6b5;font-size:10px;line-height:1.5;text-align:center;font-family:Inter,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                    <div style="padding:14px 10px 0;color:#9aa6b5;font-size:10px;line-height:1.5;text-align:center;font-family:Inter,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
                         Confidentiality matters. Please handle this communication appropriately.
                     </div>
                 </td>
@@ -111,6 +140,7 @@ export const sendOtpMail = async (to, otp) => {
             to,
             subject: 'Your OTP Code',
             html: wrapEmailTemplate(content, '#0f172a', 'Whistle-Blower Portal'),
+            attachments: getLogoAttachments(),
         });
         return true;
     } catch (error) {
