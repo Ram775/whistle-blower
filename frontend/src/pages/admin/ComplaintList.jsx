@@ -49,10 +49,10 @@ export default function ComplaintList() {
 
   const filteredData = useMemo(() => {
     const term = debouncedSearch?.toLowerCase().trim();
-    let result = apiData.reverse() || [];
+    let result = [...(apiData || [])].reverse();
     if (term) {
       result = result.filter((item) =>
-        `${item.complaint_no} ${item.full_name} ${item.event} ${item.complaint_date} ${item.complaint_status}`
+        `${item.srno ?? ""} ${item.complaint_no ?? ""} ${item.full_name ?? ""} ${item.email_id ?? ""} ${item.mobile_no ?? ""} ${item.event ?? ""} ${item.complaint_date ?? ""} ${item.complaint_status ?? ""}`
           .toLowerCase()
           .includes(term),
       );
@@ -61,7 +61,10 @@ export default function ComplaintList() {
       result = result.filter(
         (item) => item.complaint_status === selectedFilter,
       );
-    return result.map((item, index) => ({ ...item, sr: index + 1 }));
+    return result.map((item, index) => ({
+      ...item,
+      sr: item.srno ?? index + 1,
+    }));
   }, [apiData, selectedFilter, debouncedSearch]);
 
   useEffect(() => {
@@ -111,10 +114,12 @@ export default function ComplaintList() {
 
       const exportData = filteredData.map((item) => ({
         "SR No.": item.sr,
-        "Complaint No": item?.complaint_no ?? "---",
-        Complainant: item?.full_name ?? "---",
+        "Complaint Number": item?.complaint_no ?? "---",
+        "Customer Name": item?.full_name ?? "---",
+        "Email ID": item?.email_id ?? "---",
+        "Mobile Number": item?.mobile_no ?? "---",
+        "Complaint Date": item?.complaint_date ?? "---",
         Event: item?.event ?? "---",
-        Date: item?.complaint_date ?? "---",
         Status: item?.complaint_status ?? "---",
       }));
 
@@ -187,6 +192,7 @@ export default function ComplaintList() {
         (item) =>
           (item.complaint_no && item.complaint_no.length > 30) ||
           (item.full_name && item.full_name.length > 25) ||
+          (item.email_id && item.email_id.length > 25) ||
           (item.event && item.event.length > 30),
       );
 
@@ -224,10 +230,12 @@ export default function ComplaintList() {
 
       const headers = [
         "SR No.",
-        "Complaint No",
-        "Complainant",
+        "Complaint Number",
+        "Customer Name",
+        "Email ID",
+        "Mobile Number",
+        "Complaint Date",
         "Event",
-        "Date",
         "Status",
       ];
 
@@ -235,8 +243,10 @@ export default function ComplaintList() {
         (index + 1).toString(),
         cleanText(item?.complaint_no),
         cleanText(item?.full_name),
-        cleanText(item?.event),
+        cleanText(item?.email_id),
+        cleanText(item?.mobile_no),
         cleanText(item?.complaint_date),
+        cleanText(item?.event),
         cleanText(item?.complaint_status),
       ]);
 
@@ -290,7 +300,8 @@ export default function ComplaintList() {
     }
   };
 
-  const gridTemplate = "grid-cols-[80px_1.8fr_1.2fr_1.2fr_1.5fr_1.2fr_1fr]";
+  const gridTemplate =
+    "grid-cols-[70px_1.5fr_1.2fr_1.4fr_1.1fr_1.3fr_1.6fr_1fr_80px]";
 
   return (
     <div className="bg-white app_card rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
@@ -312,7 +323,7 @@ export default function ComplaintList() {
             selectedRole={selectedFilter}
             setSelectedRole={setSelectedFilter}
             roles={["Pending", "Under Processing", "Disposed"]}
-            placeholder="Search Complaint No, Name, Event..."
+            placeholder="Search Complaint No, Name, Email, Mobile, Event..."
             showExportExcel={true}
             showExportPDF={true}
             onExportExcel={handleExportExcel}
@@ -330,6 +341,107 @@ export default function ComplaintList() {
             </div>
           )}
 
+          {/* MOBILE / SMALL SCREEN VIEW */}
+          <div className="block lg:hidden space-y-3 p-1">
+            {paginatedData.length === 0 && !loading && (
+              <div className="p-10 text-center text-gray-400 italic bg-white rounded-lg border border-dashed border-gray-300">
+                No records found
+              </div>
+            )}
+            {paginatedData.map((item) => (
+              <div
+                key={item?.id}
+                className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm space-y-2.5"
+              >
+                <div className="flex items-start justify-between gap-2 border-b border-gray-100 pb-2">
+                  <div>
+                    <span className="text-[11px] font-semibold text-gray-500">
+                      #{item.sr}
+                    </span>
+                    <h4 className="font-bold text-[#1b2a5e] text-sm break-all">
+                      <TextHighlighter
+                        text={item?.complaint_no}
+                        search={debouncedSearch}
+                      />
+                    </h4>
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 rounded text-[11px] font-semibold shrink-0 ${getStatusColor(item.complaint_status)}`}
+                  >
+                    {item.complaint_status}
+                  </span>
+                </div>
+
+                <div className="flex justify-between text-xs gap-2">
+                  <span className="text-gray-500 font-medium shrink-0">
+                    Customer Name:
+                  </span>
+                  <span className="text-gray-800 font-semibold text-right truncate">
+                    <TextHighlighter
+                      text={item?.full_name}
+                      search={debouncedSearch}
+                    />
+                  </span>
+                </div>
+
+                <div className="flex justify-between text-xs gap-2">
+                  <span className="text-gray-500 font-medium shrink-0">
+                    Email ID:
+                  </span>
+                  <span className="text-gray-800 text-right truncate">
+                    <TextHighlighter
+                      text={item?.email_id}
+                      search={debouncedSearch}
+                    />
+                  </span>
+                </div>
+
+                <div className="flex justify-between text-xs gap-2">
+                  <span className="text-gray-500 font-medium shrink-0">
+                    Mobile Number:
+                  </span>
+                  <span className="text-gray-800 text-right">
+                    <TextHighlighter
+                      text={item?.mobile_no}
+                      search={debouncedSearch}
+                    />
+                  </span>
+                </div>
+
+                <div className="flex justify-between text-xs gap-2">
+                  <span className="text-gray-500 font-medium shrink-0">
+                    Complaint Date:
+                  </span>
+                  <span className="text-gray-800 text-right">
+                    <TextHighlighter
+                      text={item?.complaint_date}
+                      search={debouncedSearch}
+                    />
+                  </span>
+                </div>
+
+                <div className="text-xs space-y-1">
+                  <span className="text-gray-500 font-medium block">Event:</span>
+                  <p className="text-gray-700 leading-snug">
+                    <TextHighlighter
+                      text={item?.event}
+                      search={debouncedSearch}
+                    />
+                  </p>
+                </div>
+
+                <div className="flex justify-end pt-2 border-t border-gray-100">
+                  <Link
+                    to={`/admin/complaints/${item.id}`}
+                    className="text-[#1b2a5e] hover:underline flex items-center gap-1 font-bold text-[11px] uppercase"
+                  >
+                    <Eye size={14} /> View
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* DESKTOP TABLE VIEW */}
           <div className="hidden lg:block w-full">
             <ListTable columns={gridTemplate}>
@@ -337,10 +449,12 @@ export default function ComplaintList() {
                 header: (
                   <ListHeader className="bg-[#d2dfff] text-[#1b2a5e] rounded-none border-none py-2 uppercase text-[12px] font-bold">
                     <div className="text-center">SR. NO</div>
-                    <div className="text-left pl-2">Complaint No</div>
-                    <div className="text-left pl-2">Complainant</div>
+                    <div className="text-left pl-2">Complaint Number</div>
+                    <div className="text-left pl-2">Customer Name</div>
+                    <div className="text-left pl-2">Email ID</div>
+                    <div className="text-left pl-2">Mobile Number</div>
+                    <div className="text-left pl-2">Complaint Date</div>
                     <div className="text-left pl-2">Event</div>
-                    <div className="text-left pl-2">Date</div>
                     <div className="text-center">Status</div>
                     <div className="text-center">Action</div>
                   </ListHeader>
@@ -356,12 +470,17 @@ export default function ComplaintList() {
                           <span className="text-center font-medium text-gray-700 text-[13px]">
                             {item.sr}
                           </span>
-                          <span className="text-left pl-2 font-semibold text-[#1b2a5e] truncate text-[13px]">
-                            <TextHighlighter
-                              text={item?.complaint_no}
-                              search={search}
-                            />
-                          </span>
+                          <Tooltip
+                            title={item?.complaint_no || ""}
+                            placement="top"
+                          >
+                            <span className="text-left pl-2 font-semibold text-[#1b2a5e] truncate text-[13px]">
+                              <TextHighlighter
+                                text={item?.complaint_no}
+                                search={debouncedSearch}
+                              />
+                            </span>
+                          </Tooltip>
 
                           <Tooltip
                             title={item?.full_name || ""}
@@ -370,24 +489,51 @@ export default function ComplaintList() {
                             <span className="text-left pl-2 truncate text-gray-700 text-[13px]">
                               <TextHighlighter
                                 text={item?.full_name}
-                                search={search}
+                                search={debouncedSearch}
                               />
                             </span>
                           </Tooltip>
+
+                          <Tooltip
+                            title={item?.email_id || ""}
+                            placement="top"
+                          >
+                            <span className="text-left pl-2 truncate text-gray-700 text-[13px]">
+                              <TextHighlighter
+                                text={item?.email_id}
+                                search={debouncedSearch}
+                              />
+                            </span>
+                          </Tooltip>
+
+                          <span className="text-left pl-2 truncate text-gray-700 text-[13px]">
+                            <TextHighlighter
+                              text={item?.mobile_no}
+                              search={debouncedSearch}
+                            />
+                          </span>
+
+                          <Tooltip
+                            title={item?.complaint_date || ""}
+                            placement="top"
+                          >
+                            <span className="text-left pl-2 truncate text-gray-700 text-[13px]">
+                              <TextHighlighter
+                                text={item?.complaint_date}
+                                search={debouncedSearch}
+                              />
+                            </span>
+                          </Tooltip>
+
                           <Tooltip title={item?.event || ""} placement="top">
                             <span className="text-left pl-2 truncate text-gray-700 text-[13px] cursor-pointer">
                               <TextHighlighter
                                 text={item?.event}
-                                search={search}
+                                search={debouncedSearch}
                               />
                             </span>
                           </Tooltip>
-                          <span className="text-left pl-2 text-gray-700 text-[13px]">
-                            <TextHighlighter
-                              text={item?.complaint_date}
-                              search={search}
-                            />
-                          </span>
+
                           <span className="flex justify-center">
                             <span
                               className={`px-2 py-0.5 rounded text-[11px] font-semibold ${getStatusColor(item.complaint_status)}`}
@@ -395,6 +541,7 @@ export default function ComplaintList() {
                               {item.complaint_status}
                             </span>
                           </span>
+
                           <span className="flex justify-center">
                             <Link
                               to={`/admin/complaints/${item.id}`}
